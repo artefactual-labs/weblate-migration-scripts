@@ -1,0 +1,150 @@
+#!/bin/bash
+#
+# Export this repository's XLIFF files into AtoM reposity 
+
+usage() {
+    echo "Exports XLIFF from the Weblate repositoryt to AtoM."
+    echo ""
+    echo "$0"
+    echo "\t-h --help"
+    echo "\t--atom-dir=<path>"
+    echo "\t--weblate-dir=<path>"
+    echo ""
+}
+
+# Parse command-line options
+while [ "$1" != "" ]; do
+    # Attempt to parse out value
+    PARAM=`echo $1 | awk -F= '{print $1}'`
+    VALUE=`echo $1 | awk -F= '{print $2}'`
+
+    # Handle when equal sign wasn't used to set option value
+    if [ -n "$CURRENT_OPTION" ]; then
+      VALUE=$PARAM
+      PARAM=$CURRENT_OPTION
+      unset CURRENT_OPTION
+    fi
+
+    # Process option
+    case $PARAM in
+        -h | --help)
+            usage
+            exit
+            ;;
+        --atom-dir)
+            ATOM_DIR=$VALUE
+            ;;
+        --weblate-dir)
+            WEBLATE_DIR=$VALUE
+            ;;
+        *)
+            echo "ERROR: unknown parameter \"$PARAM\""
+            usage
+            exit 1
+            ;;
+    esac
+
+    # Handle null values
+    if [ -z $VALUE ]; then
+        CURRENT_OPTION=$PARAM
+    fi
+
+    shift
+done
+
+# Require specification of both the AtoM repo directory and the Weblate repo directory
+if [ -z $ATOM_DIR ] || [ -z $WEBLATE_DIR ]; then
+    usage
+    exit 1
+fi
+
+# Note initial directory
+INITIAL_DIRECTORY=`cwd`
+
+# Set default commit message (if .git/hooks/prepare-commit-msg is set to prepend it)
+export GIT_COMMIT_PREPEND="Imported XLIFF files from Weblate."
+
+# Get absolute path to AtoM dir and abort if directory doesn't exist
+ATOM_DIR=`realpath $ATOM_DIR`
+if [ ! -d $ATOM_DIR ] ; then
+    echo "The AtoM directory specified doesn't exist."
+    exit
+fi
+
+# Get absolute path to Weblate dir and abort if directory doesn't exist
+WEBLATE_DIR=`realpath $WEBLATE_DIR`
+if [ ! -d $WEBLATE_DIR ] ; then
+    echo "The Weblate directory specified doesn't exist."
+    exit
+fi
+
+# Change to AtoM directory, take note of branch, and guess version
+cd $ATOM_DIR
+ATOM_BRANCH=`git rev-parse --symbolic-full-name --abbrev-ref HEAD`
+ATOM_VERSION=`basename $ATOM_BRANCH`
+echo "Currently in the '$ATOM_BRANCH' branch of the AtoM repo..."
+
+# Take note of Weblate repo's branch
+cd $WEBLATE_DIR
+WEBLATE_BRANCH=`git rev-parse --symbolic-full-name --abbrev-ref HEAD`
+echo "Currently in the '$WEBLATE_BRANCH' branch of the Weblate repo..."
+echo
+
+# Exit if estimated AtoM version doesn't match name of Weblate branch
+if [ "$ATOM_VERSION" != "$WEBLATE_BRANCH" ]; then
+    echo "Estimated AtoM version (using basename of AtoM branch) is '$ATOM_VERSION' and doesn't match name of checked out Weblate branch."
+    exit 1
+fi
+
+# Offer to update the Weblate repo
+while true; do
+    read -p "Do you wish to 'git pull --rebase' to update this Weblate repo before exporting from it? " yn
+    case $yn in
+        [Yy]* ) git pull --rebase; echo; break;;
+        [Nn]* ) echo; break;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
+
+# Offer to update the AtoM repo
+cd $ATOM_DIR
+while true; do
+    read -p "Do you wish to 'git pull --rebase' to update the AtoM repo before exporting to it? " yn
+    case $yn in
+        [Yy]* ) git pull --rebase; echo; break;;
+        [Nn]* ) echo; break;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
+
+# Change back to Weblate directory and export XLIFF to AtoM
+cd $WEBLATE_DIR
+./scripts/migrate --export i18n $ATOM_DIR/apps/qubit/i18n
+
+#######################################
+# Commit and push imported XLIFF files
+#######################################
+function commit_and_push {
+    cd $ATOM_DIR
+    git add apps/qubit/i18n
+    git commit
+    git push
+    cd $WEBLATE_DIR
+}
+
+# Offer to commit and push changes if XLIFF was imported successfully
+if [ $? -eq 0 ]
+then
+    echo
+    while true; do
+        read -p "Do you wish to commit the changes to the AtoM repo and push them? " yn
+        case $yn in
+            [Yy]* ) commit_and_push; break;;
+            [Nn]* ) exit;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
+fi
+
+# Return to inital directory
+cd $INITIAL_DIRECTORY

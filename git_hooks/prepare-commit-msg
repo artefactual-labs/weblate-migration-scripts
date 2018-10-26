@@ -1,0 +1,5 @@
+#!/bin/bash
+echo $GIT_COMMIT_PREPEND
+if [ -n "$GIT_COMMIT_PREPEND" ] ; then
+    echo -e "$GIT_COMMIT_PREPEND\n$(cat $1)" > $1
+fi
