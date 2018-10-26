@@ -1,9 +1,9 @@
 #!/bin/bash
 #
-# Export this repository's XLIFF files into AtoM reposity 
+# Export XLIFF files translated by Weblate into an AtoM repository
 
 usage() {
-    echo "Exports XLIFF from the Weblate repositoryt to AtoM."
+    echo "Exports XLIFF from the Weblate repository to AtoM."
     echo ""
     echo "$0"
     echo "\t-h --help"
@@ -98,7 +98,7 @@ fi
 
 # Offer to update the Weblate repo
 while true; do
-    read -p "Do you wish to 'git pull --rebase' to update this Weblate repo before exporting from it? " yn
+    read -p "Do you wish to 'git pull --rebase' to update the Weblate repo before exporting from it? " yn
     case $yn in
         [Yy]* ) git pull --rebase; echo; break;;
         [Nn]* ) echo; break;;

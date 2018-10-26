@@ -1,9 +1,10 @@
 #!/bin/bash
 #
-# Import AtoM XLIFF files into this Git reposity
+# Import AtoM XLIFF files into a reposity containing XLIFF files to be
+# translated using Weblate
 
 usage() {
-    echo "Imports XLIFF from AtoM into the Weblate repository."
+    echo "Imports XLIFF from AtoM into a repository used by Weblate."
     echo ""
     echo "$0"
     echo "\t-h --help"
@@ -78,7 +79,7 @@ if [ ! -d $WEBLATE_DIR ] ; then
     exit
 fi
 
-# Take note of Weblate repo directory (using this script's directory to determine it) and branch
+# Take note of current branch checkout out by Weblate repo
 cd $WEBLATE_DIR
 WEBLATE_BRANCH=`git rev-parse --symbolic-full-name --abbrev-ref HEAD`
 
