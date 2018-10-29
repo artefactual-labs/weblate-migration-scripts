@@ -117,7 +117,8 @@ while true; do
 done
 
 # Attempt import
-./scripts/migrate --import $ATOM_DIR/apps/qubit/i18n i18n
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+$SCRIPT_DIR/scripts/migrate --import $ATOM_DIR/apps/qubit/i18n $WEBLATE_DIR/i18n
 
 # Check out AtoM i18n directory to remove changed local files
 cd $ATOM_DIR
