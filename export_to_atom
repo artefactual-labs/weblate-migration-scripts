@@ -117,9 +117,9 @@ while true; do
     esac
 done
 
-# Change back to Weblate directory and export XLIFF to AtoM
-cd $WEBLATE_DIR
-./scripts/migrate --export i18n $ATOM_DIR/apps/qubit/i18n
+# Export XLIFF to AtoM
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+$SCRIPT_DIR/scripts/migrate --export $WEBLATE_DIR/i18n $ATOM_DIR/apps/qubit/i18n
 
 #######################################
 # Commit and push imported XLIFF files
@@ -129,7 +129,6 @@ function commit_and_push {
     git add apps/qubit/i18n
     git commit
     git push
-    cd $WEBLATE_DIR
 }
 
 # Offer to commit and push changes if XLIFF was imported successfully
