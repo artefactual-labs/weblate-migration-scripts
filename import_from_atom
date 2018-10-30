@@ -7,13 +7,16 @@ usage() {
     echo "Imports XLIFF from AtoM into a repository used by Weblate."
     echo ""
     echo "$0"
-    echo "\t-h --help"
-    echo "\t--atom-dir=<path>"
-    echo "\t--weblate-dir=<path>"
+    echo "    -h --help"
+    echo "    --atom-dir=<path>"
+    echo "    --weblate-dir=<path>"
+    echo "    [--no-pull]"
     echo ""
+    echo "The --no-pull option skips optional git pulls."
 }
 
 # Parse command-line options
+NO_PULL=false
 while [ "$1" != "" ]; do
     # Attempt to parse out value
     PARAM=`echo $1 | awk -F= '{print $1}'`
@@ -37,6 +40,10 @@ while [ "$1" != "" ]; do
             ;;
         --weblate-dir)
             WEBLATE_DIR=$VALUE
+            ;;
+        --no-pull)
+            NO_PULL=true
+            VALUE=true
             ;;
         *)
             echo "ERROR: unknown parameter \"$PARAM\""
@@ -107,14 +114,16 @@ echo "The AtoM repository has the '$ATOM_BRANCH' branch checked out."
 cd $WEBLATE_DIR
 
 # Offer to update the Weblate repo
-while true; do
-    read -p "Do you wish to 'git pull --rebase' in the Weblate repository before importing? " yn
-    case $yn in
-        [Yy]* ) git pull --rebase; echo; break;;
-        [Nn]* ) echo; break;;
-        * ) echo "Please answer yes or no.";;
-    esac
-done
+if [ "$NO_PULL" = false ]; then
+    while true; do
+        read -p "Do you wish to 'git pull --rebase' in the Weblate repository before importing? " yn
+        case $yn in
+            [Yy]* ) git pull --rebase; echo; break;;
+            [Nn]* ) echo; break;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
+fi
 
 # Attempt import
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"

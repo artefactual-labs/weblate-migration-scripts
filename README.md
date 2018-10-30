@@ -40,6 +40,9 @@ attributes to each XLIFF translation unit that's already been translated).
 The script will then offer to Git commit the XLIFF files in the i18n
 subdirectory of the Weblate repo and Git push the changes.
 
+The `--no-pull` option can be used to stop the script from prompting to do a
+git pull.
+
 
 Copy XLIFF files from Weblate repo into AtoM
 --------------------------------------------
