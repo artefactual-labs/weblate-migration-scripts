@@ -6,13 +6,16 @@ usage() {
     echo "Exports XLIFF from the Weblate repository to AtoM."
     echo ""
     echo "$0"
-    echo "\t-h --help"
-    echo "\t--atom-dir=<path>"
-    echo "\t--weblate-dir=<path>"
+    echo "    -h --help"
+    echo "    --atom-dir=<path>"
+    echo "    --weblate-dir=<path>"
+    echo "    [--no-pull]"
     echo ""
+    echo "The --no-pull option skips optional git pulls."
 }
 
 # Parse command-line options
+NO_PULL=false
 while [ "$1" != "" ]; do
     # Attempt to parse out value
     PARAM=`echo $1 | awk -F= '{print $1}'`
@@ -36,6 +39,10 @@ while [ "$1" != "" ]; do
             ;;
         --weblate-dir)
             WEBLATE_DIR=$VALUE
+            ;;
+        --no-pull)
+            NO_PULL=true
+            VALUE=true
             ;;
         *)
             echo "ERROR: unknown parameter \"$PARAM\""
@@ -96,26 +103,28 @@ if [ "$ATOM_VERSION" != "$WEBLATE_BRANCH" ]; then
     exit 1
 fi
 
-# Offer to update the Weblate repo
-while true; do
-    read -p "Do you wish to 'git pull --rebase' to update the Weblate repo before exporting from it? " yn
-    case $yn in
-        [Yy]* ) git pull --rebase; echo; break;;
-        [Nn]* ) echo; break;;
-        * ) echo "Please answer yes or no.";;
-    esac
-done
+if [ "$NO_PULL" = false ]; then
+    # Offer to update the Weblate repo
+    while true; do
+        read -p "Do you wish to 'git pull --rebase' to update the Weblate repo before exporting from it? " yn
+        case $yn in
+            [Yy]* ) git pull --rebase; echo; break;;
+            [Nn]* ) echo; break;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
 
-# Offer to update the AtoM repo
-cd $ATOM_DIR
-while true; do
-    read -p "Do you wish to 'git pull --rebase' to update the AtoM repo before exporting to it? " yn
-    case $yn in
-        [Yy]* ) git pull --rebase; echo; break;;
-        [Nn]* ) echo; break;;
-        * ) echo "Please answer yes or no.";;
-    esac
-done
+    # Offer to update the AtoM repo
+    cd $ATOM_DIR
+    while true; do
+        read -p "Do you wish to 'git pull --rebase' to update the AtoM repo before exporting to it? " yn
+        case $yn in
+            [Yy]* ) git pull --rebase; echo; break;;
+            [Nn]* ) echo; break;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
+fi
 
 # Export XLIFF to AtoM
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
