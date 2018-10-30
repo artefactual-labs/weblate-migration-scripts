@@ -2,6 +2,8 @@
 #
 # Export XLIFF files translated by Weblate into an AtoM repository
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
 usage() {
     echo "Exports XLIFF from the Weblate repository to AtoM."
     echo ""
@@ -127,7 +129,6 @@ if [ "$NO_PULL" = false ]; then
 fi
 
 # Export XLIFF to AtoM
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 $SCRIPT_DIR/scripts/migrate --export $WEBLATE_DIR/i18n $ATOM_DIR/apps/qubit/i18n
 
 #######################################

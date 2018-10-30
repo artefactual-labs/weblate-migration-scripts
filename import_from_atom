@@ -3,6 +3,8 @@
 # Import AtoM XLIFF files into a reposity containing XLIFF files to be
 # translated using Weblate
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
 usage() {
     echo "Imports XLIFF from AtoM into a repository used by Weblate."
     echo ""
@@ -126,7 +128,6 @@ if [ "$NO_PULL" = false ]; then
 fi
 
 # Attempt import
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 $SCRIPT_DIR/scripts/migrate --import $ATOM_DIR/apps/qubit/i18n $WEBLATE_DIR/i18n
 
 # Check out AtoM i18n directory to remove changed local files
