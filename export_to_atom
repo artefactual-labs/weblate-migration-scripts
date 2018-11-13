@@ -68,7 +68,7 @@ if [ -z $ATOM_DIR ] || [ -z $WEBLATE_DIR ]; then
 fi
 
 # Note initial directory
-INITIAL_DIRECTORY=`cwd`
+INITIAL_DIRECTORY=`pwd`
 
 # Set default commit message (if .git/hooks/prepare-commit-msg is set to prepend it)
 export GIT_COMMIT_PREPEND="Imported XLIFF files from Weblate."
