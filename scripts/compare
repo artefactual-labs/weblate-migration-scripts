@@ -1,35 +1,7 @@
 #!/usr/bin/php
 <?php
 
-function parseArgs($argv)
-{
-  $args = array();
-  $flags = array();
-
-  foreach($argv as $index => $value)
-  {
-    // Ignore $argv[0]
-    if ($index)
-    {
-      if (substr($value, 0, 2) === "--")
-      {
-        $flags[strtolower(substr($value, 2, strlen($value) - 2))] = true;
-      }
-      else
-      {
-        array_push($args, $value);
-      }
-    }
-  }
-
-  return array('args' => $args, 'flags' => $flags);
-}
-
-function abort($errorDescription)
-{
-  print $errorDescription ."\n";
-  exit(1);
-}
+include('include/helpers.inc.php');
 
 function blankXliffFileElementDateAttribute($file)
 {
@@ -43,59 +15,6 @@ function blankXliffFileElementDateAttribute($file)
   }
 
   $xml->asXml($file);
-}
-
-function setTransUnitAttributes($file)
-{
-  $changed = false;
-
-  $xml = simplexml_load_file($file);
-
-  $elements = $xml->xpath("//trans-unit");
-
-  foreach ($elements as $element)
-  {
-    // Trans units extracted from source get numerical IDs: fix
-    $id = (string) $element['id'];
-    $source = $element->xpath('source')[0]->__toString();
-
-    if ($id != sha1($source))
-    {
-      $element['id'] = sha1($source);
-    }
-
-    // Set "approved" and "translated" attributes so Weblate knows translation status
-    if (count($element->xpath('source')) && count($element->xpath('target')) && !empty(trim($element->xpath('target')[0]->__toString())))
-    {
-      $element->addAttribute('approved', 'yes');
-      $element->addAttribute('translated', 'yes');
-      $changed = true;
-    }
-  }
-
-  if ($changed)
-  {
-    $xml->asXml($file);
-  }
-}
-
-function formatXliffForWeblate($file)
-{
-  // Add 'approved' and 'translated' attributes
-  setTransUnitAttributes($file);
-
-  // Load XLIFF file into DOM document
-  $dom = new DOMDocument();
-  $dom->load($file);
-  $dom->encoding = 'UTF-8';
-
-  // Prepend XML in Weblate format
-  $xml = "<?xml version='1.0' encoding='UTF-8'?>\n";
-  #$xml = str_replace('"', "'", $newDome->saveXml());
-  $xml .= '<!DOCTYPE xliff PUBLIC "-//XLIFF//DTD XLIFF//EN" "http://www.oasis-open.org/committees/xliff/documents/xliff.dtd">'. "\n";
-  $xml .= $dom->saveXml($dom->documentElement);
-
-  file_put_contents($file, $xml);
 }
 
 function compare($fromI18nDir, $toI18nDir, $options = array())
@@ -144,16 +63,18 @@ function compare($fromI18nDir, $toI18nDir, $options = array())
         copy($fromFile, $fromTmpFile);
         formatXliffForWeblate($fromTmpFile);
         blankXliffFileElementDateAttribute($fromTmpFile);
+        unsetTransUnitAttributes($fromTmpFile);
 
         // Copy Weblate's XLIFF file to temp file
         $toFile = $toI18nDir . DIRECTORY_SEPARATOR . $langFileRelativePath;
         $toTmpFile = tempnam(sys_get_temp_dir(), 'xliffcompareto');
         copy($toFile, $toTmpFile);
         blankXliffFileElementDateAttribute($toTmpFile);
+        unsetTransUnitAttributes($toTmpFile);
 
         if (!empty($options['debug']))
         {
-          print 'DEBUG: Converted and compared '. $fromFile .' ('. filesize($fromTmpFile) .' bytes) to '. $toFile .' ('. filesize($toTmpFile) ." bytes)\n";
+          print 'DEBUG: Normalized and compared '. $fromFile .' ('. filesize($fromTmpFile) .' bytes) to '. $toFile .' ('. filesize($toTmpFile) ." bytes)\n";
         }
 
         if (sha1_file($fromTmpFile) != sha1_file($toTmpFile))
@@ -173,15 +94,15 @@ $parsed = parseArgs($argv);
 $args = $parsed['args'];
 $flags = $parsed['flags'];
 
-$fromDirectory = (isset($args[0])) ? $args[0] : null;
-$toDirectory   = (isset($args[1])) ? $args[1] : null;
+$atomDirectory = (isset($args[0])) ? $args[0] : null;
+$weblateDirectory   = (isset($args[1])) ? $args[1] : null;
 
-if (empty($fromDirectory) || empty($toDirectory))
+if (empty($atomDirectory) || empty($weblateDirectory))
 {
-  abort("Usage: ". basename(__FILE__) . " <from directory> <to directory>\n");
+  abort("Usage: ". basename(__FILE__) . " <AtoM i18n directory> <Weblate i18n directory>\n");
 }
 
-$compareCount = compare($fromDirectory, $toDirectory, $flags);
+$compareCount = compare($atomDirectory, $weblateDirectory, $flags);
 
 if ($compareCount)
 {
