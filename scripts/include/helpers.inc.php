@@ -81,28 +81,3 @@ function addTransUnitAttributes($file)
     $xml->asXml($file);
   }
 }
-
-function unsetTransUnitAttributes($file)
-{
-  $changed = false;
-
-  $xml = simplexml_load_file($file);
-
-  $elements = $xml->xpath("//trans-unit");
-
-  foreach ($elements as $element)
-  {
-    // Set "approved" and "translated" attributes so Weblate knows translation status
-    if (count($element->xpath('source')) && count($element->xpath('target')) && !empty(trim($element->xpath('target')[0]->__toString())))
-    {
-      $element['approved'] = '';
-      $element['translated'] = '';
-      $changed = true;
-    }
-  }
-
-  if ($changed)
-  {
-    $xml->asXml($file);
-  }
-}
