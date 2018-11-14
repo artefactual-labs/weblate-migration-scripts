@@ -82,6 +82,9 @@ function compare($fromI18nDir, $toI18nDir, $options = array())
           return false;
         }
 
+        unlink($fromTmpFile);
+        unlink($toTmpFile);
+
         $compareCount++;
       }
     }
