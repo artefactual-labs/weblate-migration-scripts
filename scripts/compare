@@ -1,0 +1,194 @@
+#!/usr/bin/php
+<?php
+
+function parseArgs($argv)
+{
+  $args = array();
+  $flags = array();
+
+  foreach($argv as $index => $value)
+  {
+    // Ignore $argv[0]
+    if ($index)
+    {
+      if (substr($value, 0, 2) === "--")
+      {
+        $flags[strtolower(substr($value, 2, strlen($value) - 2))] = true;
+      }
+      else
+      {
+        array_push($args, $value);
+      }
+    }
+  }
+
+  return array('args' => $args, 'flags' => $flags);
+}
+
+function abort($errorDescription)
+{
+  print $errorDescription ."\n";
+  exit(1);
+}
+
+function blankXliffFileElementDateAttribute($file)
+{
+  $xml = simplexml_load_file($file);
+
+  $elements = $xml->xpath("/xliff/file");
+
+  foreach ($elements as $element)
+  { 
+    $element['date'] = '';
+  }
+
+  $xml->asXml($file);
+}
+
+function setTransUnitAttributes($file)
+{
+  $changed = false;
+
+  $xml = simplexml_load_file($file);
+
+  $elements = $xml->xpath("//trans-unit");
+
+  foreach ($elements as $element)
+  {
+    // Trans units extracted from source get numerical IDs: fix
+    $id = (string) $element['id'];
+    $source = $element->xpath('source')[0]->__toString();
+
+    if ($id != sha1($source))
+    {
+      $element['id'] = sha1($source);
+    }
+
+    // Set "approved" and "translated" attributes so Weblate knows translation status
+    if (count($element->xpath('source')) && count($element->xpath('target')) && !empty(trim($element->xpath('target')[0]->__toString())))
+    {
+      $element->addAttribute('approved', 'yes');
+      $element->addAttribute('translated', 'yes');
+      $changed = true;
+    }
+  }
+
+  if ($changed)
+  {
+    $xml->asXml($file);
+  }
+}
+
+function formatXliffForWeblate($file)
+{
+  // Add 'approved' and 'translated' attributes
+  setTransUnitAttributes($file);
+
+  // Load XLIFF file into DOM document
+  $dom = new DOMDocument();
+  $dom->load($file);
+  $dom->encoding = 'UTF-8';
+
+  // Prepend XML in Weblate format
+  $xml = "<?xml version='1.0' encoding='UTF-8'?>\n";
+  #$xml = str_replace('"', "'", $newDome->saveXml());
+  $xml .= '<!DOCTYPE xliff PUBLIC "-//XLIFF//DTD XLIFF//EN" "http://www.oasis-open.org/committees/xliff/documents/xliff.dtd">'. "\n";
+  $xml .= $dom->saveXml($dom->documentElement);
+
+  file_put_contents($file, $xml);
+}
+
+function compare($fromI18nDir, $toI18nDir, $options = array())
+{
+  // Make sure destination directory exists
+  if (!is_dir($toI18nDir))
+  { 
+    abort('No "'. $toI18nDir .'" directory.');
+  }
+
+  // Cycle through each AtoM language directory
+  print "Attempting to cycle through language directories in ". $fromI18nDir ."...\n";
+  try
+  {
+    $dir = new DirectoryIterator($fromI18nDir);
+  }
+  catch(Exception $e)
+  {
+    abort('Unable to access '. $fromI18nDir);
+  }
+
+  $compareCount = 0;
+
+  foreach ($dir as $fileinfo)
+  {
+    if (!$fileinfo->isDot()) {
+      $langDir = $fileinfo->getFilename();
+
+      // There's no need to migrate English as it doesn't need to be translated
+      if (is_dir($fromI18nDir . DIRECTORY_SEPARATOR . $langDir) && $langDir != 'en')
+      {
+        // Each language's XLIFF file'll end up in a subdir of the i18n directory
+        $destLangDir = $toI18nDir . DIRECTORY_SEPARATOR . $langDir;
+
+        // Create destination language directory if it doesn't exist
+        if (!is_dir($destLangDir))
+        {
+          print "Compare could not complete: directory not found: ". $destLangDir ."\n";
+          return false;
+        }
+
+        // Copy AtoM's XLIFF file to temp file, reformatting it to Weblate
+        $langFileRelativePath = $langDir . DIRECTORY_SEPARATOR . "messages.xml";
+        $fromFile = $fromI18nDir . DIRECTORY_SEPARATOR . $langFileRelativePath;
+        $fromTmpFile = tempnam(sys_get_temp_dir(), 'xliffcomparefrom');
+        copy($fromFile, $fromTmpFile);
+        formatXliffForWeblate($fromTmpFile);
+        blankXliffFileElementDateAttribute($fromTmpFile);
+
+        // Copy Weblate's XLIFF file to temp file
+        $toFile = $toI18nDir . DIRECTORY_SEPARATOR . $langFileRelativePath;
+        $toTmpFile = tempnam(sys_get_temp_dir(), 'xliffcompareto');
+        copy($toFile, $toTmpFile);
+        blankXliffFileElementDateAttribute($toTmpFile);
+
+        if (!empty($options['debug']))
+        {
+          print 'DEBUG: Converted and compared '. $fromFile .' ('. filesize($fromTmpFile) .' bytes) to '. $toFile .' ('. filesize($toTmpFile) ." bytes)\n";
+        }
+
+        if (sha1_file($fromTmpFile) != sha1_file($toTmpFile))
+        {
+          return false;
+        }
+
+        $compareCount++;
+      }
+    }
+  }
+
+  return $compareCount;
+}
+
+$parsed = parseArgs($argv);
+$args = $parsed['args'];
+$flags = $parsed['flags'];
+
+$fromDirectory = (isset($args[0])) ? $args[0] : null;
+$toDirectory   = (isset($args[1])) ? $args[1] : null;
+
+if (empty($fromDirectory) || empty($toDirectory))
+{
+  abort("Usage: ". basename(__FILE__) . " <from directory> <to directory>\n");
+}
+
+$compareCount = compare($fromDirectory, $toDirectory, $flags);
+
+if ($compareCount)
+{
+  print "Done: compared ". $compareCount ." XLIFF files.\n";
+}
+else
+{
+  print "Compare failed.\n";
+  exit(1);
+}
