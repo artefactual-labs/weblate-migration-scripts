@@ -20,6 +20,12 @@ function countSubdirectories($directory)
   return $count;
 }
 
+function normalizeWeblateXliff($file)
+{
+  blankXliffFileElementDateAttribute($file);
+  unsetTransUnitAttributes($file);
+}
+
 function blankXliffFileElementDateAttribute($file)
 {
   $xml = simplexml_load_file($file);
@@ -110,15 +116,13 @@ function compare($fromI18nDir, $toI18nDir, $options = array())
         $fromTmpFile = tempnam(sys_get_temp_dir(), 'xliffcomparefrom');
         copy($fromFile, $fromTmpFile);
         formatXliffForWeblate($fromTmpFile);
-        blankXliffFileElementDateAttribute($fromTmpFile);
-        unsetTransUnitAttributes($fromTmpFile);
+        normalizeWeblateXliff($fromTmpFile);
 
         // Copy Weblate's XLIFF file to temp file
         $toFile = $toI18nDir . DIRECTORY_SEPARATOR . $langFileRelativePath;
         $toTmpFile = tempnam(sys_get_temp_dir(), 'xliffcompareto');
         copy($toFile, $toTmpFile);
-        blankXliffFileElementDateAttribute($toTmpFile);
-        unsetTransUnitAttributes($toTmpFile);
+        normalizeWeblateXliff($toTmpFile);
 
         if (!empty($options['debug']))
         {
