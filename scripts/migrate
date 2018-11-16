@@ -38,11 +38,7 @@ function formatXliffForAtom($file)
 
 function migrate($fromI18nDir, $toI18nDir, $options = array())
 {
-  // Make sure destination directory exists
-  if (!is_dir($toI18nDir))
-  { 
-    abort('No "'. $toI18nDir .'" directory.');
-  }
+  abortIfDirectoryDoesNotExist($toI18nDir);
 
   // Cycle through each AtoM language directory
   print "Attempting to cycle through language directories in ". $fromI18nDir ."...\n";

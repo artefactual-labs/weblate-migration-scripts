@@ -73,13 +73,9 @@ function xliff_trans_units_as_json($file)
 
 function compare($fromI18nDir, $toI18nDir, $options = array())
 {
-  // Make sure destination directory exists
-  if (!is_dir($toI18nDir))
-  { 
-    abort('No "'. $toI18nDir .'" directory.');
-  }
+  abortIfDirectoryDoesNotExist($toI18nDir);
 
-  // Cycle through each AtoM language directory
+  // Cycle through each language directory
   print "Attempting to cycle through language directories in ". $fromI18nDir ."...\n";
   try
   {
@@ -103,7 +99,7 @@ function compare($fromI18nDir, $toI18nDir, $options = array())
     if (!$fileinfo->isDot()) {
       $langDir = $fileinfo->getFilename();
 
-      // There's no need to migrate English as it doesn't need to be translated
+      // There's no need to compare English as it doesn't need to be translated
       if (is_dir($fromI18nDir . DIRECTORY_SEPARATOR . $langDir) && $langDir != 'en')
       {
         // Each language's XLIFF file'll end up in a subdir of the i18n directory
@@ -137,6 +133,7 @@ function compare($fromI18nDir, $toI18nDir, $options = array())
           return false;
         }
 
+        // Keep temp files if in debug mode
         if (empty($options['debug']))
         {
           unlink($fromTmpFile);

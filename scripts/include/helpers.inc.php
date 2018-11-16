@@ -30,6 +30,14 @@ function abort($errorDescription)
   exit(1);
 }
 
+function abortIfDirectoryDoesNotExist($dir)
+{
+  if (!is_dir($dir))
+  {
+    abort('No "'. $dir .'" directory.');
+  }
+}
+
 function formatXliffForWeblate($file)
 {
   // Add 'approved' and 'translated' attributes
