@@ -12,12 +12,17 @@ usage() {
     echo "    -h --help"
     echo "    --atom-dir=<path>"
     echo "    --weblate-dir=<path>"
+    echo "    [--commit-with-message=<message>"
     echo "    [--no-pull]"
     echo ""
+    echo "The --commit-with-message will automatically commit any XLIFF changed"
+    echo "    using the specified message."
+    echo
     echo "The --no-pull option skips optional git pulls."
 }
 
 # Parse command-line options
+COMMIT_WITH_MESSAGE=false
 NO_PULL=false
 while [ "$1" != "" ]; do
     # Attempt to parse out value
@@ -43,6 +48,9 @@ while [ "$1" != "" ]; do
         --weblate-dir)
             WEBLATE_DIR=$VALUE
             ;;
+        --commit-with-message)
+            COMMIT_WITH_MESSAGE=$VALUE
+            ;;
         --no-pull)
             NO_PULL=true
             VALUE=true
@@ -55,7 +63,7 @@ while [ "$1" != "" ]; do
     esac
 
     # Handle null values
-    if [ -z $VALUE ]; then
+    if [ -z "$VALUE" ]; then
         CURRENT_OPTION=$PARAM
     fi
 
@@ -127,39 +135,56 @@ if [ "$NO_PULL" = false ]; then
     done
 fi
 
-# Attempt import
-$SCRIPT_DIR/scripts/migrate --import $ATOM_DIR/apps/qubit/i18n $WEBLATE_DIR/i18n
+# Compare AtoM XLIFF to Weblate XLIFF to see if an import is needed
+$SCRIPT_DIR/scripts/compare $ATOM_DIR/apps/qubit/i18n $WEBLATE_DIR/i18n
 
-# Check out AtoM i18n directory to remove changed local files
-cd $ATOM_DIR
-git checkout apps/qubit/i18n
-cd $WEBLATE_DIR
-
-#######################################
-# Commit and push imported XLIFF files
-#######################################
-function commit_and_push {
-    git add i18n
-    git commit
-    git push
-}
-
-# Offer to commit and push changes if XLIFF was imported successfully
-if [ $? -eq 0 ]
+# Import if Weblate's not up to date
+if [ $? -ne 0 ]
 then
+
+    # Attempt import
+    $SCRIPT_DIR/scripts/migrate --import $ATOM_DIR/apps/qubit/i18n $WEBLATE_DIR/i18n
+    MIGRATE_SUCCESS=$?
+
+    # Check out AtoM i18n directory to remove changed local files
+    cd $ATOM_DIR
+    git checkout apps/qubit/i18n
+    cd $WEBLATE_DIR
+
+    #######################################
+    # Commit and push imported XLIFF files
+    #######################################
+    function commit_and_push {
+        git add i18n
+        git commit
+        git push
+    }
+
+    # Offer to commit and push changes if XLIFF was imported successfully
+    if [ $MIGRATE_SUCCESS -eq 0 ]; then
+        echo
+
+        if [ "$COMMIT_WITH_MESSAGE" = false ]; then
+            while true; do
+                read -p "Do you wish to commit the changes to the Weblate repo and push them? " yn
+                case $yn in
+                    [Yy]* ) commit_and_push; break;;
+                    [Nn]* ) exit;;
+                    * ) echo "Please answer yes or no.";;
+                esac
+            done
+        else
+            git add i18n
+            git commit -m "$COMMIT_WITH_MESSAGE"
+            git push
+        fi
+    fi
+
     echo
-    while true; do
-        read -p "Do you wish to commit the changes to the Weblate repo and push them? " yn
-        case $yn in
-            [Yy]* ) commit_and_push; break;;
-            [Nn]* ) exit;;
-            * ) echo "Please answer yes or no.";;
-        esac
-    done
+    echo "Remember to do a Git pull in the Weblate UI before doing translation work."
+else
+    echo "No import needed."
 fi
 
 # Return to inital directory
 cd $INITIAL_DIRECTORY
-
-echo
-echo "Remember to do a Git pull in the Weblate UI before doing translation work."
