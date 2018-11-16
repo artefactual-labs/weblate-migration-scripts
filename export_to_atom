@@ -128,31 +128,41 @@ if [ "$NO_PULL" = false ]; then
     done
 fi
 
-# Export XLIFF to AtoM
-$SCRIPT_DIR/scripts/migrate --export $WEBLATE_DIR/i18n $ATOM_DIR/apps/qubit/i18n
+# Compare AtoM XLIFF to Weblate XLIFF to see if an import is needed
+$SCRIPT_DIR/scripts/compare $ATOM_DIR/apps/qubit/i18n $WEBLATE_DIR/i18n
 
-#######################################
-# Commit and push imported XLIFF files
-#######################################
-function commit_and_push {
-    cd $ATOM_DIR
-    git add apps/qubit/i18n
-    git commit
-    git push
-}
-
-# Offer to commit and push changes if XLIFF was imported successfully
-if [ $? -eq 0 ]
+# Import if Atom's not up to date
+if [ $? -ne 0 ]
 then
-    echo
-    while true; do
-        read -p "Do you wish to commit the changes to the AtoM repo and push them? " yn
-        case $yn in
-            [Yy]* ) commit_and_push; break;;
-            [Nn]* ) exit;;
-            * ) echo "Please answer yes or no.";;
-        esac
-    done
+
+    # Export XLIFF to AtoM
+    $SCRIPT_DIR/scripts/migrate --export $WEBLATE_DIR/i18n $ATOM_DIR/apps/qubit/i18n
+
+    #######################################
+    # Commit and push imported XLIFF files
+    #######################################
+    function commit_and_push {
+        cd $ATOM_DIR
+        git add apps/qubit/i18n
+        git commit
+        git push
+    }
+
+    # Offer to commit and push changes if XLIFF was imported successfully
+    if [ $? -eq 0 ]
+    then
+        echo
+        while true; do
+            read -p "Do you wish to commit the changes to the AtoM repo and push them? " yn
+            case $yn in
+                [Yy]* ) commit_and_push; break;;
+                [Nn]* ) exit;;
+                * ) echo "Please answer yes or no.";;
+            esac
+        done
+    fi
+else
+    echo "No export needed."
 fi
 
 # Return to inital directory

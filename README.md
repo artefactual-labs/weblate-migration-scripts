@@ -60,7 +60,7 @@ Run script to copy the XLIFF files from the Weblate repo into AtoM's
 
 Example:
 
-    ./export_to_atom /usr/share/nginx/atom --atom-dir="/usr/share/nginx/atom" --weblate-dir="../weblate-xliff"
+    ./export_to_atom --atom-dir="/usr/share/nginx/atom" --weblate-dir="../weblate-xliff"
 
 In addition to copying the XLIFF files it will also process them so they're 
 suitable for AtoM (among other things, removing "approved" and "translated" 
