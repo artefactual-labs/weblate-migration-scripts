@@ -20,49 +20,55 @@ function countSubdirectories($directory)
   return $count;
 }
 
-function normalizeWeblateXliff($file)
+function compare_translation_unit_data($a, $b)
 {
-  blankXliffFileElementDateAttribute($file);
-  unsetTransUnitAttributes($file);
+  // Compare all text, instead of just source, in case there are duplicate
+  // source strings in translation unit data
+  $aText = $a['source'];
+  $aText .= (isset($a['note'])) ? $a['note'] : '';
+  $aText .= (isset($a['target'])) ? $a['target'] : '';
+
+  $bText = $b['source'];
+  $bText .= (isset($b['note'])) ? $b['note'] : '';
+  $bText .= (isset($b['target'])) ? $b['target'] : '';
+
+  return $aText > $bText;
 }
 
-function blankXliffFileElementDateAttribute($file)
+function xliff_trans_units_as_json($file)
 {
+  // Load translation units from XML file
   $xml = simplexml_load_file($file);
+  $elements = $xml->xpath("/xliff/file/body/trans-unit");
 
-  $elements = $xml->xpath("/xliff/file");
-
-  foreach ($elements as $element)
-  { 
-    $element['date'] = '';
-  }
-
-  $xml->asXml($file);
-}
-
-function unsetTransUnitAttributes($file)
-{
-  $changed = false;
-
-  $xml = simplexml_load_file($file);
-
-  $elements = $xml->xpath("//trans-unit");
+  // Consolidate translation units into array
+  $transUnits = array();
 
   foreach ($elements as $element)
   {
-    // Set "approved" and "translated" attributes so Weblate knows translation status
-    if (count($element->xpath('source')) && count($element->xpath('target')) && !empty(trim($element->xpath('target')[0]->__toString())))
+    $transUnit = array();
+
+    if (count($element->xpath('source')))
     {
-      $element['approved'] = '';
-      $element['translated'] = '';
-      $changed = true;
+      $transUnit['source'] = trim($element->xpath('source')[0]->__toString());
     }
+
+    if (count($element->xpath('target')))
+    {
+      $transUnit['target'] = trim($element->xpath('target')[0]->__toString());
+    }
+
+    if (count($element->xpath('note')))
+    {
+      $transUnit['note'] = trim($element->xpath('note')[0]->__toString());
+    }
+
+    array_push($transUnits, $transUnit);
   }
 
-  if ($changed)
-  {
-    $xml->asXml($file);
-  }
+  // Sort array by source string and return as JSON
+  usort($transUnits, "compare_translation_unit_data");
+  return json_encode($transUnits, JSON_PRETTY_PRINT);
 }
 
 function compare($fromI18nDir, $toI18nDir, $options = array())
@@ -114,15 +120,12 @@ function compare($fromI18nDir, $toI18nDir, $options = array())
         $langFileRelativePath = $langDir . DIRECTORY_SEPARATOR . "messages.xml";
         $fromFile = $fromI18nDir . DIRECTORY_SEPARATOR . $langFileRelativePath;
         $fromTmpFile = tempnam(sys_get_temp_dir(), 'xliffcomparefrom');
-        copy($fromFile, $fromTmpFile);
-        formatXliffForWeblate($fromTmpFile);
-        normalizeWeblateXliff($fromTmpFile);
+        file_put_contents($fromTmpFile, xliff_trans_units_as_json($fromFile));
 
         // Copy Weblate's XLIFF file to temp file
         $toFile = $toI18nDir . DIRECTORY_SEPARATOR . $langFileRelativePath;
         $toTmpFile = tempnam(sys_get_temp_dir(), 'xliffcompareto');
-        copy($toFile, $toTmpFile);
-        normalizeWeblateXliff($toTmpFile);
+        file_put_contents($toTmpFile, xliff_trans_units_as_json($toFile));
 
         if (!empty($options['debug']))
         {
@@ -134,8 +137,11 @@ function compare($fromI18nDir, $toI18nDir, $options = array())
           return false;
         }
 
-        unlink($fromTmpFile);
-        unlink($toTmpFile);
+        if (empty($options['debug']))
+        {
+          unlink($fromTmpFile);
+          unlink($toTmpFile);
+        }
 
         $compareCount++;
       }
