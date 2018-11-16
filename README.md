@@ -49,7 +49,7 @@ changes (with the commit message specified as a value for the option).
 Example of automated import:
 
     $ ./import_from_atom --atom-dir="/usr/share/nginx/atom" --weblate-dir="../weblate-xliff" \
-      --commit-with-message="Imported new translations" --no-pull
+      --commit-with-message="Imported new translations from AtoM" --no-pull
 
 
 Copy XLIFF files from Weblate repo into AtoM
@@ -71,3 +71,11 @@ The script will then offer to Git commit the XLIFF files in the
 
 The `--no-pull` option can be used to stop the script from prompting to do a
 git pull.
+
+The `--commit-with-message` option can be used to automatically commit any
+changes (with the commit message specified as a value for the option).
+
+Example of automated import:
+
+    $ ./export_from_atom --atom-dir="/usr/share/nginx/atom" --weblate-dir="../weblate-xliff" \
+      --commit-with-message="Imported new translations from Weblate" --no-pull

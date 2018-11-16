@@ -11,8 +11,12 @@ usage() {
     echo "    -h --help"
     echo "    --atom-dir=<path>"
     echo "    --weblate-dir=<path>"
+    echo "    [--commit-with-message=<message>]"
     echo "    [--no-pull]"
     echo ""
+    echo "The --commit-with-message will automatically commit any XLIFF changed"
+    echo "    using the specified message."
+    echo
     echo "The --no-pull option skips optional git pulls."
 }
 
@@ -42,6 +46,9 @@ while [ "$1" != "" ]; do
         --weblate-dir)
             WEBLATE_DIR=$VALUE
             ;;
+        --commit-with-message)
+            COMMIT_WITH_MESSAGE=$VALUE
+            ;;
         --no-pull)
             NO_PULL=true
             VALUE=true
@@ -54,7 +61,7 @@ while [ "$1" != "" ]; do
     esac
 
     # Handle null values
-    if [ -z $VALUE ]; then
+    if [ -z "$VALUE" ]; then
         CURRENT_OPTION=$PARAM
     fi
 
@@ -142,7 +149,6 @@ then
     # Commit and push imported XLIFF files
     #######################################
     function commit_and_push {
-        cd $ATOM_DIR
         git add apps/qubit/i18n
         git commit
         git push
@@ -151,15 +157,24 @@ then
     # Offer to commit and push changes if XLIFF was imported successfully
     if [ $? -eq 0 ]
     then
+        cd $ATOM_DIR
+
         echo
-        while true; do
-            read -p "Do you wish to commit the changes to the AtoM repo and push them? " yn
-            case $yn in
-                [Yy]* ) commit_and_push; break;;
-                [Nn]* ) exit;;
-                * ) echo "Please answer yes or no.";;
-            esac
-        done
+
+        if [ "$COMMIT_WITH_MESSAGE" = false ]; then
+            while true; do
+                read -p "Do you wish to commit the changes to the AtoM repo and push them? " yn
+                case $yn in
+                    [Yy]* ) commit_and_push; break;;
+                    [Nn]* ) exit;;
+                    * ) echo "Please answer yes or no.";;
+                esac
+            done
+        else
+            git add apps/qubit/i18n
+            git commit -m "$COMMIT_WITH_MESSAGE"
+            git push
+        fi
     fi
 else
     echo "No export needed."

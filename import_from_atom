@@ -12,7 +12,7 @@ usage() {
     echo "    -h --help"
     echo "    --atom-dir=<path>"
     echo "    --weblate-dir=<path>"
-    echo "    [--commit-with-message=<message>"
+    echo "    [--commit-with-message=<message>]"
     echo "    [--no-pull]"
     echo ""
     echo "The --commit-with-message will automatically commit any XLIFF changed"
