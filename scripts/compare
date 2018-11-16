@@ -171,6 +171,6 @@ if ($compareCount)
 }
 else
 {
-  print "Compare failed.\n";
+  print "Difference detected.\n";
   exit(1);
 }
