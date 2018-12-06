@@ -1,0 +1,45 @@
+node {
+  timestamps {
+    stage('Get code') {
+      // If environment variables are defined, honour them
+      env.ATOM_BRANCH = sh(script: 'echo ${ATOM_BRANCH:-"qa/2.5.x"}', returnStdout: true).trim()
+      env.TRANSLATIONS_BRANCH = sh(script: 'echo ${TRANSLATIONS_BRANCH:-"2.5.x"}', returnStdout: true).trim()
+      env.WEBLATE_BRANCH = sh(script: 'echo ${WEBLATE_BRANCH:-"master"}', returnStdout: true).trim()
+      // Set build name
+      currentBuild.displayName = "#${BUILD_NUMBER} Import AtoM ${ATOM_BRANCH}"
+
+      checkout([$class: 'GitSCM',
+        branches: [[name: env.ATOM_BRANCH]],
+        doGenerateSubmoduleConfigurations: false,
+        extensions:
+          [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'atom'],
+          [$class: 'LocalBranch', localBranch:env.ATOM_BRANCH ]],
+          submoduleCfg: [],
+          userRemoteConfigs: [[url: 'https://github.com/artefactual/atom']]])
+       checkout([$class: 'GitSCM',
+        branches: [[name: env.TRANSLATIONS_BRANCH]],
+        doGenerateSubmoduleConfigurations: false,
+        extensions:
+          [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'atom-translations'],
+          [$class: 'LocalBranch', localBranch:env.TRANSLATIONS_BRANCH ]],
+          submoduleCfg: [],
+          userRemoteConfigs: [[url: 'git@github.com:artefactual/atom-translations']]])
+       checkout([$class: 'GitSCM',
+        branches: [[name: env.WEBLATE_BRANCH]],
+        doGenerateSubmoduleConfigurations: false,
+        extensions:
+          [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'weblate-migration-scripts']],
+          submoduleCfg: [],
+          userRemoteConfigs: [[url: 'https://github.com/artefactual-labs/weblate-migration-scripts']]])
+    }
+
+
+    stage ('Import strings from atom') {
+      sh '''
+        echo Importing new AtoM strings to Weblate
+        cd weblate-migration-scripts
+        ./import_from_atom --atom-dir=\"../atom\" --weblate-dir=\"../atom-translations\" --no-pull --commit-with-message=\"Imported new strings from AtoM\"
+      '''
+    }
+  }
+}
