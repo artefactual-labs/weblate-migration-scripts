@@ -3,7 +3,7 @@
 
 include('include/helpers.inc.php');
 
-function formatXliffForAtom($file)
+function formatXliffForAtom($file, $options = array())
 {
   // Load XLIFF file into DOM document (tidying so whitespace is same as in AtoM)
   $dom = new DOMDocument();
@@ -18,8 +18,17 @@ function formatXliffForAtom($file)
 
   foreach ($elements as $element)
   {
-    $element->removeAttribute('approved');
-    $element->removeAttribute('translated');
+    if (strtolower($element->getAttribute('approved')) != 'yes' && strtolower($element->getAttribute('translated')) != 'yes')
+    {
+      // Remove translation unit if it's not translated and approved
+      $element->parentNode->removeChild($element);
+    }
+    else
+    {
+      // Remove approved and translated attributes
+      $element->removeAttribute('approved');
+      $element->removeAttribute('translated');
+    }
   }
 
   // Correct XML and DOCTYPE
@@ -86,7 +95,7 @@ function migrate($fromI18nDir, $toI18nDir, $options = array())
         // Remove approved and translated properties
         if (!empty($options['export']))
         {
-          formatXliffForAtom($toFile);
+          formatXliffForAtom($toFile, $options);
         }
 
         if (!empty($options['debug']))
@@ -111,12 +120,17 @@ $toDirectory   = (isset($args[1])) ? $args[1] : null;
 
 if (empty($fromDirectory) || empty($toDirectory))
 {
-  abort("Usage: ". basename(__FILE__) . " [--import|--export] <from directory> <to directory>\n");
+  abort("Usage: ". basename(__FILE__) . " [--import|--export] [--aproved] <from directory> <to directory>\n");
 }
 
 if (empty($flags['import']) && empty($flags['export']))
 {
   abort('Either the --import or --export flag should be used with this script.');
+}
+
+if (empty($flags['export']) && !empty($flags['approved']))
+{
+  abort("The --approved flag (export transliation units marked 'approved') only works with --export.\n");
 }
 
 $copyCount = migrate($fromDirectory, $toDirectory, $flags);

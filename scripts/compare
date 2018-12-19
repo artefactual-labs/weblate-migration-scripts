@@ -35,11 +35,16 @@ function compare_translation_unit_data($a, $b)
   return $aText > $bText;
 }
 
-function xliff_trans_units_as_json($file)
+function xliff_trans_units_as_json($file, $approvedOnly = false)
 {
   // Load translation units from XML file
   $xml = simplexml_load_file($file);
-  $elements = $xml->xpath("/xliff/file/body/trans-unit");
+  $xpath = "/xliff/file/body/trans-unit";
+  if ($approvedOnly)
+  {
+    $xpath .= "[@approved='yes']";
+  }
+  $elements = $xml->xpath($xpath);
 
   // Consolidate translation units into array
   $transUnits = array();
@@ -121,7 +126,7 @@ function compare($fromI18nDir, $toI18nDir, $options = array())
         // Copy Weblate's XLIFF file to temp file
         $toFile = $toI18nDir . DIRECTORY_SEPARATOR . $langFileRelativePath;
         $toTmpFile = tempnam(sys_get_temp_dir(), 'xliffcompareto');
-        file_put_contents($toTmpFile, xliff_trans_units_as_json($toFile));
+        file_put_contents($toTmpFile, xliff_trans_units_as_json($toFile, true));
 
         if (!empty($options['debug']))
         {
@@ -130,6 +135,7 @@ function compare($fromI18nDir, $toI18nDir, $options = array())
 
         if (sha1_file($fromTmpFile) != sha1_file($toTmpFile))
         {
+          print sprintf("Difference found in language '%s'.\n", $langDir);
           return false;
         }
 
