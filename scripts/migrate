@@ -67,6 +67,13 @@ function migrate($fromI18nDir, $toI18nDir, $options = array())
     if (!$fileinfo->isDot()) {
       $langDir = $fileinfo->getFilename();
 
+      // If a language is specified, skip if this isn't the one
+      if (isset($options['language']) && $options['language'] != 'all' && $options['language'] != $langDir)
+      {
+        print "Skipped language '". $langDir ."'.\n";
+        continue;
+      }
+
       // There's no need to migrate English as it doesn't need to be translated
       if (is_dir($fromI18nDir . DIRECTORY_SEPARATOR . $langDir) && $langDir != 'en')
       {
