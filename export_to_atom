@@ -11,6 +11,7 @@ usage() {
     echo "    -h --help"
     echo "    --atom-dir=<path>"
     echo "    --weblate-dir=<path>"
+    echo "    [--language=<language code>]"
     echo "    [--commit-with-message=<message>]"
     echo "    [--no-pull]"
     echo ""
@@ -21,6 +22,7 @@ usage() {
 }
 
 # Parse command-line options
+LANG_CODE="all"
 NO_PULL=false
 while [ "$1" != "" ]; do
     # Attempt to parse out value
@@ -45,6 +47,9 @@ while [ "$1" != "" ]; do
             ;;
         --weblate-dir)
             WEBLATE_DIR=$VALUE
+            ;;
+        --language)
+            LANG_CODE=$VALUE
             ;;
         --commit-with-message)
             COMMIT_WITH_MESSAGE=$VALUE
@@ -143,7 +148,7 @@ if [ $? -ne 0 ]
 then
 
     # Export XLIFF to AtoM
-    $SCRIPT_DIR/scripts/migrate --export --approved $WEBLATE_DIR/i18n $ATOM_DIR/apps/qubit/i18n
+    $SCRIPT_DIR/scripts/migrate --export --language="$LANG_CODE" --approved $WEBLATE_DIR/i18n $ATOM_DIR/apps/qubit/i18n
 
     #######################################
     # Commit and push imported XLIFF files
