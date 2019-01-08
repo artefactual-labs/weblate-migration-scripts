@@ -51,6 +51,9 @@ Example of automated import:
     $ ./import_from_atom --atom-dir="/usr/share/nginx/atom" --weblate-dir="../weblate-xliff" \
       --commit-with-message="Imported new translations from AtoM" --no-pull
 
+If you just want to import a single language from AtoM use the `--language`
+option. For example: `--language="ca"`.
+
 
 Copy XLIFF files from Weblate repo into AtoM
 --------------------------------------------
@@ -79,3 +82,6 @@ Example of automated import:
 
     $ ./export_from_atom --atom-dir="/usr/share/nginx/atom" --weblate-dir="../weblate-xliff" \
       --commit-with-message="Imported new translations from Weblate" --no-pull
+
+If you just want to export a single language from AtoM use the `--language` 
+option. For example: `--language="ca"`.
