@@ -148,7 +148,7 @@ if [ $? -ne 0 ]
 then
 
     # Attempt import
-    $SCRIPT_DIR/scripts/migrate --language="$LANG_CODE" --import $ATOM_DIR/apps/qubit/i18n $WEBLATE_DIR/i18n
+    $SCRIPT_DIR/scripts/migrate --import --language="$LANG_CODE" $ATOM_DIR/apps/qubit/i18n $WEBLATE_DIR/i18n
     MIGRATE_SUCCESS=$?
 
     # Check out AtoM i18n directory to remove changed local files
