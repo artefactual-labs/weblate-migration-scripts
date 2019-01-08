@@ -85,3 +85,14 @@ Example of automated import:
 
 If you just want to export a single language from AtoM use the `--language` 
 option. For example: `--language="ca"`.
+
+
+Approving all translation units in an XLIFF file
+------------------------------------------------
+
+Run script to mark all translation units in an XLIFF file as `approved` and
+`translated`.
+
+Example:
+
+    ./scripts/approve i18n/ca/messages.xml

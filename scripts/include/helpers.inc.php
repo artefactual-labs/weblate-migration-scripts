@@ -68,9 +68,9 @@ function formatXliffForWeblate($file)
   file_put_contents($file, $xml);
 }
 
-function addTransUnitAttributes($file)
+function addTransUnitAttributes($file, $preserveIds = false)
 {
-  $changed = false;
+  $changed = 0;
 
   $xml = simplexml_load_file($file);
 
@@ -78,13 +78,16 @@ function addTransUnitAttributes($file)
 
   foreach ($elements as $element)
   {
-    // Trans units extracted from source get numerical IDs: fix
-    $id = (string) $element['id'];
-    $source = $element->xpath('source')[0]->__toString();
-
-    if ($id != sha1($source))
+    if (!$preserveIds)
     {
-      $element['id'] = sha1($source);
+      // Trans units extracted from source get numerical IDs: fix
+      $id = (string) $element['id'];
+      $source = $element->xpath('source')[0]->__toString();
+
+      if ($id != sha1($source))
+      {
+        $element['id'] = sha1($source);
+      }
     }
 
     // Set "approved" and "translated" attributes so Weblate knows translation status
@@ -92,7 +95,7 @@ function addTransUnitAttributes($file)
     {
       $element->addAttribute('approved', 'yes');
       $element->addAttribute('translated', 'yes');
-      $changed = true;
+      $changed++;
     }
   }
 
@@ -100,4 +103,6 @@ function addTransUnitAttributes($file)
   {
     $xml->asXml($file);
   }
+
+  return $changed;
 }

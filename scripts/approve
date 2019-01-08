@@ -1,0 +1,33 @@
+#!/usr/bin/php
+<?php
+
+include('include/helpers.inc.php');
+
+$parsed = parseArgs($argv);
+$args = $parsed['args'];
+$flags = $parsed['flags'];
+
+$xliffFile = (isset($args[0])) ? $args[0] : null;
+
+if (empty($xliffFile))
+{
+  abort("Usage: ". basename(__FILE__) . " <XLIFF file>\n");
+}
+
+if (!is_file($xliffFile))
+{
+  about("That does not appear to be a file.\n");
+  exit(1);
+}
+
+$approveCount = addTransUnitAttributes($xliffFile, true);
+
+if ($approveCount)
+{
+  print "Done: approved ". $approveCount ." XLIFF translation units.\n";
+}
+else
+{
+  print "Not XLIFF translation units found.\n";
+  exit(1);
+}
