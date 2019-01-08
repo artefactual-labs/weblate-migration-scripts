@@ -12,6 +12,7 @@ usage() {
     echo "    -h --help"
     echo "    --atom-dir=<path>"
     echo "    --weblate-dir=<path>"
+    echo "    [--language=<language code>]"
     echo "    [--commit-with-message=<message>]"
     echo "    [--no-pull]"
     echo ""
@@ -22,6 +23,7 @@ usage() {
 }
 
 # Parse command-line options
+LANG_CODE="all"
 COMMIT_WITH_MESSAGE=false
 NO_PULL=false
 while [ "$1" != "" ]; do
@@ -47,6 +49,9 @@ while [ "$1" != "" ]; do
             ;;
         --weblate-dir)
             WEBLATE_DIR=$VALUE
+            ;;
+        --language)
+            LANG_CODE=$VALUE
             ;;
         --commit-with-message)
             COMMIT_WITH_MESSAGE=$VALUE
@@ -143,7 +148,7 @@ if [ $? -ne 0 ]
 then
 
     # Attempt import
-    $SCRIPT_DIR/scripts/migrate --import $ATOM_DIR/apps/qubit/i18n $WEBLATE_DIR/i18n
+    $SCRIPT_DIR/scripts/migrate --language="$LANG_CODE" --import $ATOM_DIR/apps/qubit/i18n $WEBLATE_DIR/i18n
     MIGRATE_SUCCESS=$?
 
     # Check out AtoM i18n directory to remove changed local files
