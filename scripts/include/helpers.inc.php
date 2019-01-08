@@ -12,7 +12,19 @@ function parseArgs($argv)
     {
       if (substr($value, 0, 2) === "--")
       {
-        $flags[strtolower(substr($value, 2, strlen($value) - 2))] = true;
+        // Allow options to be flags or have values
+        if (substr_count($value, '='))
+        {
+          $valueStart = strpos($value, '=') + 1;
+          $name = strtolower(substr($value, 2, $valueStart - 3));
+          $value = substr($value, $valueStart, strlen($value) - $valueStart);
+
+          $flags[$name] = $value;
+        }
+        else
+        {
+          $flags[strtolower(substr($value, 2, strlen($value) - 2))] = true;
+        }
       }
       else
       {
