@@ -93,9 +93,19 @@ function addTransUnitAttributes($file, $preserveIds = false)
     // Set "approved" and "translated" attributes so Weblate knows translation status
     if (count($element->xpath('source')) && count($element->xpath('target')) && !empty(trim($element->xpath('target')[0]->__toString())))
     {
-      $element->addAttribute('approved', 'yes');
-      $element->addAttribute('translated', 'yes');
-      $changed++;
+      // Set "approved" attribute
+      if (!isset($element['approved']) || strtolower($element['approved']) != 'yes')
+      {
+        $element->addAttribute('approved', 'yes');
+
+        $changed++;
+      }
+
+      // Set "translated" attribute
+      if (!isset($element['translated']) || strtolower($element['translated']) != 'yes')
+      {
+        $element->addAttribute('translated', 'yes');
+      }
     }
   }
 
