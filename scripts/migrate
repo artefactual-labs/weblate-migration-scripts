@@ -127,7 +127,7 @@ $toDirectory   = (isset($args[1])) ? $args[1] : null;
 
 if (empty($fromDirectory) || empty($toDirectory))
 {
-  abort("Usage: ". basename(__FILE__) . " [--import|--export] [--aproved] <from directory> <to directory>\n");
+  abort("Usage: ". basename(__FILE__) . " [--import|--export] [--aproved] [--language=<language code>] [--debug] <from directory> <to directory>\n");
 }
 
 if (empty($flags['import']) && empty($flags['export']))
