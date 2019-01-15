@@ -3,6 +3,57 @@
 
 include('include/helpers.inc.php');
 
+function approveAllInI18n($i18nDir, $options = array())
+{
+  abortIfDirectoryDoesNotExist($i18nDir);
+
+  // Cycle through each AtoM language directory
+  print "Attempting to approve XLIFF files in directories in ". $i18nDir ."...\n";
+  try
+  {
+    $dir = new DirectoryIterator($i18nDir);
+  }
+  catch(Exception $e)
+  {
+    abort('Unable to access '. $i18nDir);
+  }
+
+  $unitCount = 0;
+  $fileCount = 0;
+
+  foreach ($dir as $fileinfo)
+  {
+    if (!$fileinfo->isDot()) {
+      $langDir = $fileinfo->getFilename();
+
+      // If a language is specified, skip if this isn't the one
+      if (isset($options['language']) && $options['language'] != 'all' && $options['language'] != $langDir)
+      {
+        print "Skipped language '". $langDir ."'.\n";
+        continue;
+      }
+
+      // There's no need to migrate English as it doesn't need to be translated
+      $pathToLangDir = $i18nDir . DIRECTORY_SEPARATOR . $langDir;
+      if (is_dir($pathToLangDir) && $langDir != 'en')
+      {
+        $messageFile = $pathToLangDir . DIRECTORY_SEPARATOR . "messages.xml";
+        $fileUnitCount = addTransUnitAttributes($messageFile);
+        $unitCount += $fileUnitCount;
+
+        if (!empty($options['debug']))
+        {
+          print 'DEBUG: Approved '. $fileUnitCount .' units in XLIFF in '. $langDir ." (". filesize($messageFile) ." bytes)\n";
+        }
+
+        $fileCount++;
+      }
+    }
+  }
+
+  return array($unitCount, $fileCount);
+}
+
 $parsed = parseArgs($argv);
 $args = $parsed['args'];
 $flags = $parsed['flags'];
@@ -11,23 +62,25 @@ $xliffFile = (isset($args[0])) ? $args[0] : null;
 
 if (empty($xliffFile))
 {
-  abort("Usage: ". basename(__FILE__) . " <XLIFF file>\n");
+  print "Usage: ". basename(__FILE__) . " [--language=<language code>] [--debug] <i18n directory>\n\n";
+
+  print "This command can be used to either approve a single XLIFF language file (usng the\n";
+  abort("--language option) or all XLIFF files in language directories in an i18n directory.\n");
 }
 
-if (!is_file($xliffFile))
-{
-  about("That does not appear to be a file.\n");
-  exit(1);
-}
+// Approve XLIFF translation units
+$results = approveAllInI18n($xliffFile, $flags);
+$approveCount = $results[0];
 
-$approveCount = addTransUnitAttributes($xliffFile, true);
+print "Cycled through ". $results[1] ." XLIFF files.\n";
 
+// Report results
 if ($approveCount)
 {
   print "Done: approved ". $approveCount ." XLIFF translation units.\n";
 }
 else
 {
-  print "Not XLIFF translation units found.\n";
+  print "No XLIFF translation units found.\n";
   exit(1);
 }
