@@ -90,8 +90,8 @@ option. For example: `--language="ca"`.
 Approving all translation units in an XLIFF file
 ------------------------------------------------
 
-Run script to mark all translation units in an XLIFF file as `approved` and
-`translated`.
+Run script to mark all translation units in one or more XLIFF file(s) as `approved`
+and `translated`.
 
 Example:
 
