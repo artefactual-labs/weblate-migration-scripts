@@ -58,15 +58,15 @@ option. For example: `--language="ca"`.
 Copy XLIFF files from Weblate repo into AtoM
 --------------------------------------------
 
-Run script to copy the XLIFF files from the Weblate repo into AtoM's
-`apps/qubit/i18n` directory.
+Run script to copy translation units marked "approved" from XLIFF files in the
+Weblate repo to AtoM's `apps/qubit/i18n` directory.
 
 Example:
 
     ./export_to_atom --atom-dir="/usr/share/nginx/atom" --weblate-dir="../weblate-xliff"
 
 In addition to copying the XLIFF files it will also process them so they're 
-suitable for AtoM (among other things, removing "approved" and "translated" 
+suitable for AtoM (among other things, removing the "approved" and "translated" 
 attributes for each XLIFF translation unit that's been translated).
 
 The script will then offer to Git commit the XLIFF files in the
@@ -95,4 +95,7 @@ Run script to mark all translation units in an XLIFF file as `approved` and
 
 Example:
 
-    ./scripts/approve i18n/ca/messages.xml
+    ./scripts/approve i18n
+
+The `--language` option can be used to approve only translation units for a
+specific language.
