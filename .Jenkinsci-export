@@ -15,7 +15,7 @@ node {
           [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'atom'],
           [$class: 'LocalBranch', localBranch:env.ATOM_BRANCH ]],
           submoduleCfg: [],
-          userRemoteConfigs: [[url: 'https://github.com/artefactual/atom']]])
+          userRemoteConfigs: [[url: 'git@github.com:artefactual/atom']]])
        checkout([$class: 'GitSCM',
         branches: [[name: env.TRANSLATIONS_BRANCH]],
         doGenerateSubmoduleConfigurations: false,
@@ -34,11 +34,11 @@ node {
     }
 
 
-    stage ('Import strings from atom') {
+    stage ('Export strings to atom') {
       sh '''
-        echo Importing Weblate translations
+        echo Exporting Weblate translations
         cd weblate-migration-scripts
-        ./export_to_atom --atom-dir=\"../atom\" --weblate-dir=\"../atom-translations\" --no-pull --commit-with-message=\"Imported new translations from Weblate\"
+        ./export_to_atom --atom-dir=\"../atom\" --weblate-dir=\"../atom-translations\" --no-pull --commit=\"Imported new translations from Weblate\" --branch=\"dev/translations\"
       '''
     }
   }
