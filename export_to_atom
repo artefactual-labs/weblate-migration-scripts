@@ -12,11 +12,13 @@ usage() {
     echo "    --atom-dir=<path>"
     echo "    --weblate-dir=<path>"
     echo "    [--language=<language code>]"
-    echo "    [--commit-with-message=<message>]"
+    echo "    [--commit=<message>]"
+    echo "    [--branch=<branch>]"
+    echo "    [--no-push]"
     echo "    [--no-pull]"
     echo ""
-    echo "The --commit-with-message will automatically commit any XLIFF changed"
-    echo "    using the specified message."
+    echo "The --commit will automatically commit and push any XLIFF changed"
+    echo "    using the specified message, unless --no-pull is provided"
     echo
     echo "The --no-pull option skips optional git pulls."
 }
@@ -24,6 +26,7 @@ usage() {
 # Parse command-line options
 LANG_CODE="all"
 NO_PULL=false
+NO_PUSH=false
 while [ "$1" != "" ]; do
     # Attempt to parse out value
     PARAM=`echo $1 | awk -F= '{print $1}'`
@@ -51,8 +54,16 @@ while [ "$1" != "" ]; do
         --language)
             LANG_CODE=$VALUE
             ;;
-        --commit-with-message)
-            COMMIT_WITH_MESSAGE=$VALUE
+        --branch)
+            BRANCH=$VALUE
+            ;;
+
+        --commit)
+            COMMIT_WITH_MESSAGE=${VALUE:=Imported XLIFF files from Weblate.}
+            ;;
+        --no-push)
+            NO_PUSH=true
+            VALUE=true
             ;;
         --no-pull)
             NO_PULL=true
@@ -81,9 +92,6 @@ fi
 
 # Note initial directory
 INITIAL_DIRECTORY=`pwd`
-
-# Set default commit message (if .git/hooks/prepare-commit-msg is set to prepend it)
-export GIT_COMMIT_PREPEND="Imported XLIFF files from Weblate."
 
 # Get absolute path to AtoM dir and abort if directory doesn't exist
 ATOM_DIR=`realpath $ATOM_DIR`
@@ -150,15 +158,6 @@ then
     # Export XLIFF to AtoM
     $SCRIPT_DIR/scripts/migrate --export --language="$LANG_CODE" --approved $WEBLATE_DIR/i18n $ATOM_DIR/apps/qubit/i18n
 
-    #######################################
-    # Commit and push imported XLIFF files
-    #######################################
-    function commit_and_push {
-        git add apps/qubit/i18n
-        git commit
-        git push
-    }
-
     # Offer to commit and push changes if XLIFF was imported successfully
     if [ $? -eq 0 ]
     then
@@ -166,19 +165,18 @@ then
 
         echo
 
-        if [ "$COMMIT_WITH_MESSAGE" = false ]; then
-            while true; do
-                read -p "Do you wish to commit the changes to the AtoM repo and push them? " yn
-                case $yn in
-                    [Yy]* ) commit_and_push; break;;
-                    [Nn]* ) exit;;
-                    * ) echo "Please answer yes or no.";;
-                esac
-            done
-        else
+        if [ "$COMMIT" != false ]; then
+          if [ x"$BRANCH" != "x" ]; then
+             git stash save . 
+             git checkout $BRANCH > /dev/null || git checkout -b $BRANCH
+             git rebase qa/$ATOM_VERSION
+             git stash pop --quiet
+          fi
             git add apps/qubit/i18n
             git commit -m "$COMMIT_WITH_MESSAGE"
-            git push
+            if [ "$NO_PUSH" = false ]; then
+               git push
+            fi
         fi
     fi
 else
