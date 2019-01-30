@@ -21,6 +21,21 @@ AtoM version you wish to work with.
 Similarly, in the repo containing project translations, change to the branch
 corresponding to the AtoM version being translated.
 
+Examples in this README file put directories in $HOME, but they can be put
+anywhere. The `$` character in examples indicates a command-line prompt.
+
+Example setup:
+
+    $ cd $HOME
+    $ git clone https://github.com/artefactual-labs/weblate-migration-scripts
+    $ git clone https://github.com/artefactual/atom-translations
+    $ git clone https://github.com/artefactual/atom # Change to your AtoM repo
+    $ cd atom
+    $ git checkout -b qa/2.5.x origin/qa/2.5.x
+    $ cd $HOME/atom-translations
+    $ git checkout -b 2.5.x origin/2.5.x
+
+
 
 Updating AtoM XLIFF files and copying them to the Weblate repo
 --------------------------------------------------------------
@@ -29,9 +44,10 @@ To update AtoM's XLIFF files with any new source messages, extracting them from
 source code, and copy the resulting XLIFF files to the Weblate repo's `i18n`
 subdirectory, use the `import_from_atom` script.
 
-Example:
+Example import:
 
-    $ ./import_from_atom --atom-dir="/usr/share/nginx/atom" --weblate-dir="../weblate-xliff"
+    $ cd $HOME/weblate-migration-scripts
+    $ ./import_from_atom --atom-dir="$HOME/atom" --weblate-dir="$HOME/atom-translations"
 
 In addition to copying the XLIFF files it will also process them so they're
 suitable for Weblate (among other things, adding "approved" and "translated"
@@ -46,9 +62,11 @@ git pull (useful for automating XLIFF import into Weblate).
 The `--commit-with-message` option can be used to automatically commit any
 changes (with the commit message specified as a value for the option).
 
-Example of automated import:
+Example automated import:
 
-    $ ./import_from_atom --atom-dir="/usr/share/nginx/atom" --weblate-dir="../weblate-xliff" \
+    $ cd $HOME/weblate-migration-scripts
+    $ ./import_from_atom --atom-dir="$HOME/atom" \
+      --weblate-dir="$HOME/atom-translations" \
       --commit-with-message="Imported new translations from AtoM" --no-pull
 
 If you just want to import a single language from AtoM use the `--language`
@@ -61,9 +79,10 @@ Copy XLIFF files from Weblate repo into AtoM
 Run script to copy translation units marked "approved" from XLIFF files in the
 Weblate repo to AtoM's `apps/qubit/i18n` directory.
 
-Example:
+Example export:
 
-    ./export_to_atom --atom-dir="/usr/share/nginx/atom" --weblate-dir="../weblate-xliff"
+    $ cd $HOME/weblate-migration-scripts 
+    $ ./export_to_atom --atom-dir="$HOME/atom" --weblate-dir="$HOME/atom-translations"
 
 In addition to copying the XLIFF files it will also process them so they're 
 suitable for AtoM (among other things, removing the "approved" and "translated" 
@@ -78,9 +97,11 @@ git pull.
 The `--commit-with-message` option can be used to automatically commit any
 changes (with the commit message specified as a value for the option).
 
-Example of automated import:
+Example automated export:
 
-    $ ./export_from_atom --atom-dir="/usr/share/nginx/atom" --weblate-dir="../weblate-xliff" \
+    $ cd $HOME/weblate-migration-scripts
+    $ ./export_to_atom --atom-dir="$HOME/atom" \
+      --weblate-dir="$HOME/atom-translations" \
       --commit-with-message="Imported new translations from Weblate" --no-pull
 
 If you just want to export a single language from AtoM use the `--language` 
@@ -95,7 +116,8 @@ and `translated`.
 
 Example:
 
-    ./scripts/approve i18n
+    $ cd $HOME/weblate-migration-scripts
+    $ ./scripts/approve i18n
 
 The `--language` option can be used to approve only translation units for a
 specific language.
