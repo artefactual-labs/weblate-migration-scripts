@@ -31,11 +31,12 @@ For example:
     git config --global user.name "Bob Example"
     git config --global user.email "bob@example.com"
 
-3) Run the automatic setup script which to clone the necessary repos.
+3) Run the automatic setup script to clone the necessary repos.
 
 The Quick automatic setup will clone the AtoM, Weblate AtoM translations, and
 Weblate migration script repos into a subdirectory of the vagrant user's  home
-directory. The "translate" subdirectory is used for these examples.
+directory. The quick start examples assume the "translate" subdirectory is
+being used.
 
 Run the automatic setup script from any directory:
 
@@ -47,25 +48,25 @@ branch 2.5.x, for example, if the default AtoM repository branch is qa/2.5.x.
 
 4) Import or export translation data:
 
-Following are the commands to import from AtoM (new translation strings
+Following are the commands to import from AtoM (new source strings
 will automatically be extracted from AtoM's source code) or export from
 the Weblate AtoM translations repository to AtoM.
 
-Import into Weblate AtoM translations repository from AtoM:
+Import into the Weblate AtoM translations repository from AtoM:
 
     $ cd $HOME/translate/weblate-migration-scripts
     $ ./import_from_atom --atom-dir="$HOME/translate/atom" \
       --weblate-dir="$HOME/translate/atom-translations"
 
-Export from Weblate AtoM translation repository to AtoM:
+Export from the Weblate AtoM translation repository to AtoM:
 
     $ cd $HOME/translate/weblate-migration-scripts 
     $ ./export_to_atom --atom-dir="$HOME/translate/atom" \
-      --weblate-dir="$HOME/atom-translations"
+      --weblate-dir="$HOME/translate/atom-translations"
 
 
-Setup
------
+Manual setup
+------------
 
 Clone this repo to the a filesystem where you also have the AtoM repo, and the
 repo containing project translations, cloned somewhere.
@@ -94,8 +95,8 @@ Example manual setup:
 
 
 
-Updating AtoM XLIFF files and copying them to the Weblate repo
---------------------------------------------------------------
+Updating AtoM XLIFF files and importing them into the Weblate AtoM translations repo
+------------------------------------------------------------------------------------
 
 To update AtoM's XLIFF files with any new source messages (extracting them from
 source code), and copy the resulting XLIFF files to the `i18n` subdirectory in
@@ -131,8 +132,8 @@ If you just want to import a single language from AtoM use the `--language`
 option. For example: `--language="ca"`.
 
 
-Copy XLIFF files from Weblate AtoM translations repo into AtoM
---------------------------------------------------------------
+Copy XLIFF files from Weblate AtoM translations repo into the AtoM repo
+-----------------------------------------------------------------------
 
 Run script to copy translation units marked "approved" from XLIFF files in the
 Weblate AtoM translations repo to AtoM's `apps/qubit/i18n` directory.
