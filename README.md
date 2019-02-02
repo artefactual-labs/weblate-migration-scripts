@@ -15,6 +15,17 @@ https://www.accesstomemory.org/en/docs/2.5/dev-manual/env/vagrant/#dev-env-vagra
 
     $ ssh -p 2222 vagrant@127.0.0.1
 
+Before proceeding be sure to add your public/private keys (if they aren't
+already added) if you'll be exporting new translations from the AtoM Weblate
+repo to the internal AtoM repository.
+
+Also make sure your Git configuration specifies your name and email.
+
+For example:
+
+    git config --global user.name "Bob Example"
+    git config --global user.email "bob@example.com"
+
 3) Run the automatic setup script which to clone the necessary repos.
 
 The Quick automatic setup will clone the AtoM, AtoM translations, and Weblate
