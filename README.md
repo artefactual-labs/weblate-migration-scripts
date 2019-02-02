@@ -21,7 +21,7 @@ For example:
     $ ssh -p 2222 vagrant@127.0.0.1
 
 Before proceeding be sure to add your public/private keys (if they aren't
-already added) if you'll be exporting new translations from the AtoM Weblate
+already added) if you'll be exporting new translations from the Weblate AtoM
 repo to the internal AtoM repository.
 
 Also make sure your Git configuration specifies your name and email.
@@ -33,8 +33,8 @@ For example:
 
 3) Run the automatic setup script which to clone the necessary repos.
 
-The Quick automatic setup will clone the AtoM, AtoM translations, and Weblate
-migration script repos into a subdirectory of the vagrant user's  home
+The Quick automatic setup will clone the AtoM, Weblate AtoM translations, and
+Weblate migration script repos into a subdirectory of the vagrant user's  home
 directory. The "translate" subdirectory is used for these examples.
 
 Run the automatic setup script from any directory:
@@ -42,22 +42,22 @@ Run the automatic setup script from any directory:
     source <(curl -L -s https://bit.ly/2RxFp4X)
 
 The default branch in the AtoM repository will be used to determine the
-appropriate branch to change to in the AtoM translations repository: branch
-2.5.x, for example, if the default AtoM repository branch is qa/2.5.x.
+appropriate branch to change to in the Weblate AtoM translations repository:
+branch 2.5.x, for example, if the default AtoM repository branch is qa/2.5.x.
 
 4) Import or export translation data:
 
 Following are the commands to import from AtoM (new translation strings
 will automatically be extracted from AtoM's source code) or export from
-the AtoM translations repository to AtoM.
+the Weblate AtoM translations repository to AtoM.
 
-Import into Weblate translation repository from AtoM:
+Import into Weblate AtoM translations repository from AtoM:
 
     $ cd $HOME/translate/weblate-migration-scripts
     $ ./import_from_atom --atom-dir="$HOME/translate/atom" \
       --weblate-dir="$HOME/translate/atom-translations"
 
-Export from Weblate translation repository to AtoM:
+Export from Weblate AtoM translation repository to AtoM:
 
     $ cd $HOME/translate/weblate-migration-scripts 
     $ ./export_to_atom --atom-dir="$HOME/translate/atom" \
@@ -97,9 +97,9 @@ Example manual setup:
 Updating AtoM XLIFF files and copying them to the Weblate repo
 --------------------------------------------------------------
 
-To update AtoM's XLIFF files with any new source messages, extracting them from
-source code, and copy the resulting XLIFF files to the Weblate repo's `i18n`
-subdirectory, use the `import_from_atom` script.
+To update AtoM's XLIFF files with any new source messages (extracting them from
+source code), and copy the resulting XLIFF files to the `i18n` subdirectory in
+the Weblate AtoM translations repo, use the `import_from_atom` script.
 
 Example import:
 
@@ -111,10 +111,11 @@ suitable for Weblate (among other things, adding "approved" and "translated"
 attributes to each XLIFF translation unit that's already been translated).
 
 The script will then offer to Git commit the XLIFF files in the i18n
-subdirectory of the Weblate repo and Git push the changes.
+subdirectory of the Weblate AtoM translations repo and Git push the changes.
 
 The `--no-pull` option can be used to stop the script from prompting to do a
-git pull (useful for automating XLIFF import into Weblate).
+git pull (useful for automating XLIFF import into Weblate AtoM translations
+repo).
 
 The `--commit-with-message` option can be used to automatically commit any
 changes (with the commit message specified as a value for the option).
@@ -130,11 +131,11 @@ If you just want to import a single language from AtoM use the `--language`
 option. For example: `--language="ca"`.
 
 
-Copy XLIFF files from Weblate repo into AtoM
---------------------------------------------
+Copy XLIFF files from Weblate AtoM translations repo into AtoM
+--------------------------------------------------------------
 
 Run script to copy translation units marked "approved" from XLIFF files in the
-Weblate repo to AtoM's `apps/qubit/i18n` directory.
+Weblate AtoM translations repo to AtoM's `apps/qubit/i18n` directory.
 
 Example export:
 
