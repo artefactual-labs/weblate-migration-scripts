@@ -7,6 +7,10 @@ Artefactual projects (currently only AtoM).
 Setup
 -----
 
+Quick automatic setup:
+
+    source <(curl -L -s https://bit.ly/2RxFp4X)
+
 Clone this repo to the a filesystem where you also have the AtoM repo, and the
 repo containing project translations, cloned somewhere.
 
@@ -24,7 +28,7 @@ corresponding to the AtoM version being translated.
 Examples in this README file put directories in $HOME, but they can be put
 anywhere. The `$` character in examples indicates a command-line prompt.
 
-Example setup:
+Example manual setup:
 
     $ cd $HOME
     $ git clone https://github.com/artefactual-labs/weblate-migration-scripts
