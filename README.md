@@ -5,7 +5,7 @@ Artefactual projects (currently only AtoM).
 
 The **Quick start** section provides basic setup and usage information while
 subsequent sections go into more detail about what import and export actually
-do to the XLIFF data.
+do to the XLIFF data and automation of import and export.
 
 Examples in this README file use the `$` character to indicate a command-line
 prompt.
