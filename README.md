@@ -4,12 +4,52 @@ This repository contains scripts to migrate translations to and from
 Artefactual projects (currently only AtoM).
 
 
-Setup
------
+Quick start
+-----------
 
-Quick automatic setup:
+1) First use Vagrant to create an AtoM virtual machine if you haven't already:
+
+https://www.accesstomemory.org/en/docs/2.5/dev-manual/env/vagrant/#dev-env-vagrant 
+
+2) SSH into the Vagrant box. For example:
+
+    $ ssh -p 2222 vagrant@127.0.0.1
+
+3) Run the automatic setup script which to clone the necessary repos.
+
+The Quick automatic setup will clone the AtoM, AtoM translations, and Weblate
+migration script repos into a subdirectory of the vagrant user's  home
+directory. The "translate" subdirectory is used for these examples.
+
+Run the automatic setup script from any directory:
 
     source <(curl -L -s https://bit.ly/2RxFp4X)
+
+The default branch in the AtoM repository will be used to determine the
+appropriate branch to change to in the AtoM translations repository: branch
+2.5.x, for example, if the default AtoM repository branch is qa/2.5.x.
+
+4) Import or export translation data:
+
+Following are the commands to import from AtoM (new translation strings
+will automatically be extracted from AtoM's source code) or export from
+the AtoM translations repository to AtoM.
+
+Import into Weblate translation repository from AtoM:
+
+    $ cd $HOME/translate/weblate-migration-scripts
+    $ ./import_from_atom --atom-dir="$HOME/translate/atom" \
+      --weblate-dir="$HOME/translate/atom-translations"
+
+Export from Weblate translation repository to AtoM:
+
+    $ cd $HOME/translate/weblate-migration-scripts 
+    $ ./export_to_atom --atom-dir="$HOME/translate/atom" \
+      --weblate-dir="$HOME/atom-translations"
+
+
+Setup
+-----
 
 Clone this repo to the a filesystem where you also have the AtoM repo, and the
 repo containing project translations, cloned somewhere.
