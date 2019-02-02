@@ -3,6 +3,9 @@
 This repository contains scripts to migrate translations to and from
 Artefactual projects (currently only AtoM).
 
+The **Quick start** section provides basic setup and usage information while
+subsequent sections go into more detail about how things work.
+
 Examples in this README file use the `$` character to indicate a command-line
 prompt.
 
@@ -95,8 +98,8 @@ Example manual setup:
 
 
 
-Updating AtoM XLIFF files and importing them into the Weblate AtoM translations repo
-------------------------------------------------------------------------------------
+Importing from the AtoM repo into the Weblate AtoM translations repo
+--------------------------------------------------------------------
 
 To update AtoM's XLIFF files with any new source messages (extracting them from
 source code), and copy the resulting XLIFF files to the `i18n` subdirectory in
@@ -132,8 +135,8 @@ If you just want to import a single language from AtoM use the `--language`
 option. For example: `--language="ca"`.
 
 
-Copy XLIFF files from Weblate AtoM translations repo into the AtoM repo
------------------------------------------------------------------------
+Exporting from the Weblate AtoM translations repo to the AtoM repo
+------------------------------------------------------------------
 
 Run script to copy translation units marked "approved" from XLIFF files in the
 Weblate AtoM translations repo to AtoM's `apps/qubit/i18n` directory.
