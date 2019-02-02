@@ -138,8 +138,9 @@ option. For example: `--language="ca"`.
 Exporting from the Weblate AtoM translations repo to the AtoM repo
 ------------------------------------------------------------------
 
-Run script to copy translation units marked "approved" from XLIFF files in the
-Weblate AtoM translations repo to AtoM's `apps/qubit/i18n` directory.
+To copy translation units marked "approved" from XLIFF files in the Weblate
+AtoM translations repo to AtoM's `apps/qubit/i18n` directory, use the
+`export_to_atom` script.
 
 Example export:
 
