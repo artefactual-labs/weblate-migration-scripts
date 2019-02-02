@@ -3,13 +3,16 @@
 This repository contains scripts to migrate translations to and from
 Artefactual projects (currently only AtoM).
 
+Examples in this README file use the `$` character to indicate a command-line
+prompt.
+
 
 Quick start
 -----------
 
-1) First use Vagrant to create an AtoM virtual machine if you haven't already:
+1) First use Vagrant to [create an AtoM virtual machine][1] if you haven't already:
 
-https://www.accesstomemory.org/en/docs/2.5/dev-manual/env/vagrant/#dev-env-vagrant 
+[1]:https://www.accesstomemory.org/en/docs/2.5/dev-manual/env/vagrant/#dev-env-vagrant 
 
 2) SSH into the Vagrant box. For example:
 
@@ -75,9 +78,6 @@ AtoM version you wish to work with.
 
 Similarly, in the repo containing project translations, change to the branch
 corresponding to the AtoM version being translated.
-
-Examples in this README file put directories in $HOME, but they can be put
-anywhere. The `$` character in examples indicates a command-line prompt.
 
 Example manual setup:
 
