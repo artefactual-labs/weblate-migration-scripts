@@ -14,7 +14,9 @@ Quick start
 
 [1]:https://www.accesstomemory.org/en/docs/2.5/dev-manual/env/vagrant/#dev-env-vagrant 
 
-2) SSH into the Vagrant box. For example:
+2) SSH into the Vagrant box.
+
+For example:
 
     $ ssh -p 2222 vagrant@127.0.0.1
 
