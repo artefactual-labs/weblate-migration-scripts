@@ -32,8 +32,8 @@ Also make sure your Git configuration specifies your name and email.
 
 For example:
 
-    git config --global user.name "Bob Example"
-    git config --global user.email "bob@example.com"
+    $ git config --global user.name "Bob Example"
+    $ git config --global user.email "bob@example.com"
 
 3) Run the automatic setup script to clone the necessary repos.
 
@@ -44,7 +44,7 @@ being used.
 
 Run the automatic setup script from any directory:
 
-    source <(curl -L -s https://bit.ly/2RxFp4X)
+    $ source <(curl -L -s https://bit.ly/2RxFp4X)
 
 The default branch in the AtoM repository will be used to determine the
 appropriate branch to change to in the Weblate AtoM translations repository:
