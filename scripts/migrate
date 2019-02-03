@@ -18,7 +18,7 @@ function formatXliffForAtom($file, $options = array())
 
   foreach ($elements as $element)
   {
-    if (strtolower($element->getAttribute('approved')) != 'yes' && strtolower($element->getAttribute('translated')) != 'yes')
+    if (!empty($options['approved']) && strtolower($element->getAttribute('approved')) != 'yes' && strtolower($element->getAttribute('translated')) != 'yes')
     {
       // Remove translation unit if it's not translated and approved
       $element->parentNode->removeChild($element);
