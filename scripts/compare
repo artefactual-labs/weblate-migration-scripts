@@ -129,7 +129,7 @@ function compare($fromI18nDir, $toI18nDir, $options = array())
         $fromTmpFile = tempnam(sys_get_temp_dir(), 'xliffcomparefrom');
         file_put_contents($fromTmpFile, xliff_trans_units_as_json($fromFile));
 
-        // Copy Weblate's XLIFF file to temp file
+        // Copy Weblate's XLIFF file to temp file, ignoring anything that's not approved
         $toFile = $toI18nDir . DIRECTORY_SEPARATOR . $langFileRelativePath;
         $toTmpFile = tempnam(sys_get_temp_dir(), 'xliffcompareto');
         file_put_contents($toTmpFile, xliff_trans_units_as_json($toFile, true));
@@ -171,12 +171,17 @@ if (empty($atomDirectory) || empty($weblateDirectory))
 {
   abort("Usage: ". basename(__FILE__) . " <AtoM i18n directory> <Weblate i18n directory>\n");
 }
+else
+{
+  print "WARNING: Make sure the AtoM i18n directory is the first argument as unapproved translation units get filtered out of the Weblate i18n directory's XLIFF during comparison.\n";
+}
 
 $compareCount = compare($atomDirectory, $weblateDirectory, $flags);
 
 if ($compareCount)
 {
   print "Done: compared ". $compareCount ." XLIFF files.\n";
+  print "No difference detected.\n";
 }
 else
 {
