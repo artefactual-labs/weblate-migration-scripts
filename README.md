@@ -185,3 +185,20 @@ Example:
 
 The `--language` option can be used to approve only translation units for a
 specific language.
+
+
+Comparing a Weblate XLIFF file with an AtoM XLIFF file
+------------------------------------------------------
+
+The `compare` script will compare the translation units in one or more
+AtoM-formatted XLIFF files with their corresponding Weblate-formatted XLIFF
+files and will specify, via output and the exit code (set to 1 if a difference
+has been detected), whether or not a difference has been detected.
+
+During comparison all non-approved translation units in the Weblate XLIFF are
+ignored.
+
+Example:
+
+    $ cd $HOME/weblate-migration-scripts
+    $ ./scripts/compare --language="pl" --debug $HOME/translate/atom/apps/qubit/i18n $HOME/translate/atom-translations/i18n
