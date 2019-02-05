@@ -53,6 +53,13 @@ function xliff_trans_units_as_json($file, $approvedOnly = false)
   {
     $transUnit = array();
 
+    // Skip any approved translation unit that's not actually translated
+    if (!count($element->xpath('target')) || trim($element->xpath('target')[0]->__toString()) == '')
+    {
+      continue;
+    }
+
+    // Extract relevant content of translation unit
     if (count($element->xpath('source')))
     {
       $transUnit['source'] = trim($element->xpath('source')[0]->__toString());
@@ -68,7 +75,40 @@ function xliff_trans_units_as_json($file, $approvedOnly = false)
       $transUnit['note'] = trim($element->xpath('note')[0]->__toString());
     }
 
-    array_push($transUnits, $transUnit);
+    if (!empty($transUnit))
+    {
+      array_push($transUnits, $transUnit);
+    }
+  }
+
+  // If filtering out unapproved translation units, we need to take an extra step to add untransated source strings
+  if ($approvedOnly)
+  {
+    $xpath = "/xliff/file/body/trans-unit";
+
+    foreach ($elements as $element)
+    {
+      $transUnit = array();
+
+      // Add if untranslated (any untranslated units will have been skipped by the previous pass)
+      if (!count($element->xpath('target')) || trim($element->xpath('target')[0]->__toString()) == '')
+      {
+        if (count($element->xpath('source')))
+        {  
+          $transUnit['source'] = trim($element->xpath('source')[0]->__toString());
+        }
+
+        if (count($element->xpath('note')))
+        {
+          $transUnit['note'] = trim($element->xpath('note')[0]->__toString());
+        }
+
+        if (!empty($transUnit))
+        {
+          array_push($transUnits, $transUnit);
+        }
+      }
+    }
   }
 
   // Sort array by source string and return as JSON
@@ -139,10 +179,13 @@ function compare($fromI18nDir, $toI18nDir, $options = array())
           print 'DEBUG: Normalized and compared '. $fromFile .' ('. filesize($fromTmpFile) .' bytes) to '. $toFile .' ('. filesize($toTmpFile) ." bytes)\n";
         }
 
+        // Compare JSON files containing XLIFF content
+        $different = false;
+
         if (sha1_file($fromTmpFile) != sha1_file($toTmpFile))
         {
           print sprintf("Difference found in language '%s'.\n", $langDir);
-          return false;
+          $different = true;
         }
 
         // Keep temp files if in debug mode
@@ -150,6 +193,12 @@ function compare($fromI18nDir, $toI18nDir, $options = array())
         {
           unlink($fromTmpFile);
           unlink($toTmpFile);
+        }
+
+        // Stop if a difference has been found
+        if ($different)
+        {
+          return false;
         }
 
         $compareCount++;

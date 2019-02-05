@@ -205,5 +205,5 @@ Example:
                         $HOME/translate/atom-translations/i18n
 
 Note: In order to simplify comparision, XLIFF content is summarized as JSON and
-these JSON files are put into the temp directory. If debugging comparison then
-looking at thes files may provide insight.
+these JSON files are put into the temp directory. If the `--debug` option is set
+then these files won't be deleted and can be examined.
