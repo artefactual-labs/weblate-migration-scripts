@@ -201,4 +201,9 @@ ignored.
 Example:
 
     $ cd $HOME/weblate-migration-scripts
-    $ ./scripts/compare --language="pl" --debug $HOME/translate/atom/apps/qubit/i18n $HOME/translate/atom-translations/i18n
+    $ ./scripts/compare --language="pl" --debug $HOME/translate/atom/apps/qubit/i18n \
+                        $HOME/translate/atom-translations/i18n
+
+Note: In order to simplify comparision, XLIFF content is summarized as JSON and
+these JSON files are put into the temp directory. If debugging comparison then
+looking at thes files may provide insight.
