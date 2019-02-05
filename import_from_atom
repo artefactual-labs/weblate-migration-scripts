@@ -141,7 +141,7 @@ if [ "$NO_PULL" = false ]; then
 fi
 
 # Compare AtoM XLIFF to Weblate XLIFF to see if an import is needed
-$SCRIPT_DIR/scripts/compare $ATOM_DIR/apps/qubit/i18n $WEBLATE_DIR/i18n
+$SCRIPT_DIR/scripts/compare --language="$LANG_CODE" $ATOM_DIR/apps/qubit/i18n $WEBLATE_DIR/i18n
 
 # Import if Weblate's not up to date
 if [ $? -ne 0 ]
