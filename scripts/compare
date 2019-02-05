@@ -169,7 +169,7 @@ $weblateDirectory   = (isset($args[1])) ? $args[1] : null;
 
 if (empty($atomDirectory) || empty($weblateDirectory))
 {
-  abort("Usage: ". basename(__FILE__) . " <AtoM i18n directory> <Weblate i18n directory>\n");
+  abort("Usage: ". basename(__FILE__) . " [--debug] [--language=<language code>] <AtoM i18n directory> <Weblate i18n directory>\n");
 }
 else
 {
