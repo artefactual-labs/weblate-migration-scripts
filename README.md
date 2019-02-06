@@ -161,6 +161,9 @@ The script will then offer to Git commit the XLIFF files in the
 The `--no-pull` option can be used to stop the script from prompting to do a
 git pull.
 
+The `--no-push` option can be used to stop the script from attempting to
+commit and push.
+
 The `--commit-with-message` option can be used to automatically commit any
 changes (with the commit message specified as a value for the option).
 

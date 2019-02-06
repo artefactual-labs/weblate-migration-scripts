@@ -15,6 +15,7 @@ usage() {
     echo "    [--language=<language code>]"
     echo "    [--commit-with-message=<message>]"
     echo "    [--no-pull]"
+    echo "    [--no-push]"
     echo ""
     echo "The --commit-with-message will automatically commit any XLIFF changed"
     echo "    using the specified message."
@@ -27,6 +28,7 @@ LANG_CODE="all"
 APPROVED=false
 APPROVED_OPTION=""
 NO_PULL=false
+NO_PUSH=false
 while [ "$1" != "" ]; do
     # Attempt to parse out value
     PARAM=`echo $1 | awk -F= '{print $1}'`
@@ -63,6 +65,10 @@ while [ "$1" != "" ]; do
             ;;
         --no-pull)
             NO_PULL=true
+            VALUE=true
+            ;;
+        --no-push)
+            NO_PUSH=true
             VALUE=true
             ;;
         *)
@@ -183,19 +189,21 @@ then
 
         echo
 
-        if [ "$COMMIT_WITH_MESSAGE" = false ]; then
-            while true; do
-                read -p "Do you wish to commit the changes to the AtoM repo and push them? " yn
-                case $yn in
-                    [Yy]* ) commit_and_push; break;;
-                    [Nn]* ) exit;;
-                    * ) echo "Please answer yes or no.";;
-                esac
-            done
-        else
-            git add apps/qubit/i18n
-            git commit -m "$COMMIT_WITH_MESSAGE"
-            git push
+        if [ "$NO_PUSH" = false ]; then
+            if [ "$COMMIT_WITH_MESSAGE" = false ]; then
+                while true; do
+                    read -p "Do you wish to commit the changes to the AtoM repo and push them? " yn
+                    case $yn in
+                        [Yy]* ) commit_and_push; break;;
+                        [Nn]* ) exit;;
+                        * ) echo "Please answer yes or no.";;
+                    esac
+                done
+            else
+                git add apps/qubit/i18n
+                git commit -m "$COMMIT_WITH_MESSAGE"
+                git push
+            fi
         fi
     fi
 else
