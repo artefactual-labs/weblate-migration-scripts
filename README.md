@@ -195,6 +195,14 @@ Example:
 The `--language` option can be used to approve only translation units for a
 specific language.
 
+Example:
+
+    $ cd $HOME/weblate-migration-scripts
+    $ ./scripts/approve --language="pl" i18n
+
+The `--debug` flag will show expanded output during approval, indicating how
+many translation units in each XLIFF file get approved.
+
 
 Comparing a Weblate XLIFF file with an AtoM XLIFF file
 ------------------------------------------------------
