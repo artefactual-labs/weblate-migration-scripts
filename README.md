@@ -196,12 +196,12 @@ files and will specify, via output and the exit code (set to 1 if a difference
 has been detected), whether or not a difference has been detected.
 
 During comparison all non-approved translation units in the Weblate XLIFF are
-ignored.
+ignored if the `--approved` flag is set.
 
 Example:
 
     $ cd $HOME/weblate-migration-scripts
-    $ ./scripts/compare --language="pl" --debug $HOME/translate/atom/apps/qubit/i18n \
+    $ ./scripts/compare --language="pl" --approved $HOME/translate/atom/apps/qubit/i18n \
                         $HOME/translate/atom-translations/i18n
 
 Note: In order to simplify comparision, XLIFF content is summarized as JSON and

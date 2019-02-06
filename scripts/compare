@@ -172,7 +172,7 @@ function compare($fromI18nDir, $toI18nDir, $options = array())
         // Copy Weblate's XLIFF file to temp file, ignoring anything that's not approved
         $toFile = $toI18nDir . DIRECTORY_SEPARATOR . $langFileRelativePath;
         $toTmpFile = tempnam(sys_get_temp_dir(), 'xliffcompareto');
-        file_put_contents($toTmpFile, xliff_trans_units_as_json($toFile, true));
+        file_put_contents($toTmpFile, xliff_trans_units_as_json($toFile, !empty($options['approved'])));
 
         if (!empty($options['debug']))
         {
@@ -218,14 +218,14 @@ $weblateDirectory   = (isset($args[1])) ? $args[1] : null;
 
 if (empty($atomDirectory) || empty($weblateDirectory))
 {
-  abort("Usage: ". basename(__FILE__) . " [--debug] [--language=<language code>] <AtoM i18n directory> <Weblate i18n directory>\n");
+  abort("Usage: ". basename(__FILE__) . " [--approved] [--debug] [--language=<language code>] <AtoM i18n directory> <Weblate i18n directory>\n");
 }
 else
 {
   print "\n**********************************************************************************\n";
   print "WARNING: Make sure the AtoM i18n directory is the first argument as unapproved\n";
   print "         translation units get filtered out of the Weblate i18n directory's XLIFF\n";
-  print "         during comparison.\n";
+  print "         during comparison if the --approved flag is set.\n";
   print "**********************************************************************************\n\n";
 }
 
