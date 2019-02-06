@@ -65,7 +65,7 @@ Import into the Weblate AtoM translations repository from AtoM:
 Export from the Weblate AtoM translation repository to AtoM:
 
     $ cd $HOME/translate/weblate-migration-scripts 
-    $ ./export_to_atom --atom-dir="$HOME/translate/atom" \
+    $ ./export_to_atom --approved --atom-dir="$HOME/translate/atom" \
       --weblate-dir="$HOME/translate/atom-translations"
 
 
@@ -140,13 +140,16 @@ Exporting from the Weblate AtoM translations repo to the AtoM repo
 ------------------------------------------------------------------
 
 To copy translation units marked "approved" from XLIFF files in the Weblate
-AtoM translations repo to AtoM's `apps/qubit/i18n` directory, use the
-`export_to_atom` script.
+AtoM translations repo to AtoM's `apps/qubit/i18n` directory, execute the
+`export_to_atom` script using the `--approved` flag.
 
 Example export:
 
     $ cd $HOME/weblate-migration-scripts 
-    $ ./export_to_atom --atom-dir="$HOME/atom" --weblate-dir="$HOME/atom-translations"
+    $ ./export_to_atom --approved --atom-dir="$HOME/atom" --weblate-dir="$HOME/atom-translations"
+
+If the `--approved` flag isn't set all translation units will be exported to
+AtoM (used for testing out unapproved translations).
 
 In addition to copying the XLIFF files it will also process them so they're 
 suitable for AtoM (among other things, removing the "approved" and "translated" 
@@ -164,7 +167,7 @@ changes (with the commit message specified as a value for the option).
 Example automated export:
 
     $ cd $HOME/weblate-migration-scripts
-    $ ./export_to_atom --atom-dir="$HOME/atom" \
+    $ ./export_to_atom --approved --atom-dir="$HOME/atom" \
       --weblate-dir="$HOME/atom-translations" \
       --commit-with-message="Imported new translations from Weblate" --no-pull
 

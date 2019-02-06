@@ -220,7 +220,7 @@ if (empty($atomDirectory) || empty($weblateDirectory))
 {
   abort("Usage: ". basename(__FILE__) . " [--approved] [--debug] [--language=<language code>] <AtoM i18n directory> <Weblate i18n directory>\n");
 }
-else
+elseif(empty($flags['no-warning']))
 {
   print "\n**********************************************************************************\n";
   print "WARNING: Make sure the AtoM i18n directory is the first argument as unapproved\n";

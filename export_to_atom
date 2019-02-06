@@ -11,6 +11,7 @@ usage() {
     echo "    -h --help"
     echo "    --atom-dir=<path>"
     echo "    --weblate-dir=<path>"
+    echo "    [--approved]"
     echo "    [--language=<language code>]"
     echo "    [--commit-with-message=<message>]"
     echo "    [--no-pull]"
@@ -23,6 +24,8 @@ usage() {
 
 # Parse command-line options
 LANG_CODE="all"
+APPROVED=false
+APPROVED_OPTION=""
 NO_PULL=false
 while [ "$1" != "" ]; do
     # Attempt to parse out value
@@ -54,6 +57,10 @@ while [ "$1" != "" ]; do
         --commit-with-message)
             COMMIT_WITH_MESSAGE=$VALUE
             ;;
+        --approved)
+            APPROVED=true
+            VALUE=true
+            ;;
         --no-pull)
             NO_PULL=true
             VALUE=true
@@ -72,6 +79,16 @@ while [ "$1" != "" ]; do
 
     shift
 done
+
+if [ "$APPROVED" = true ]; then
+  APPROVED_OPTION="--approved"
+else
+  echo "*******************************************************************"
+  echo "WARNING: If --approved flag isn't set, even unapproved translation"
+  echo "         units will be exported."
+  echo "*******************************************************************"
+  echo
+fi
 
 # Require specification of both the AtoM repo directory and the Weblate repo directory
 if [ -z $ATOM_DIR ] || [ -z $WEBLATE_DIR ]; then
@@ -141,14 +158,14 @@ if [ "$NO_PULL" = false ]; then
 fi
 
 # Compare AtoM XLIFF to Weblate XLIFF to see if an import is needed
-$SCRIPT_DIR/scripts/compare --language="$LANG_CODE" $ATOM_DIR/apps/qubit/i18n $WEBLATE_DIR/i18n
+$SCRIPT_DIR/scripts/compare $APPROVED_OPTION --no-warning --language="$LANG_CODE" $ATOM_DIR/apps/qubit/i18n $WEBLATE_DIR/i18n
 
 # Import if Atom's not up to date
 if [ $? -ne 0 ]
 then
 
     # Export XLIFF to AtoM
-    $SCRIPT_DIR/scripts/migrate --export --language="$LANG_CODE" --approved $WEBLATE_DIR/i18n $ATOM_DIR/apps/qubit/i18n
+    $SCRIPT_DIR/scripts/migrate --export --language="$LANG_CODE" $APPROVED_OPTION $WEBLATE_DIR/i18n $ATOM_DIR/apps/qubit/i18n
 
     #######################################
     # Commit and push imported XLIFF files
