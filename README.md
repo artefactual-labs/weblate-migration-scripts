@@ -226,7 +226,7 @@ these JSON files are put into the temp directory. If the `--debug` option is set
 then these files won't be deleted and can be examined.
 
 
-Adding a langauge to AtoM
+Adding a language to AtoM
 -------------------------
 
 * Untested *
