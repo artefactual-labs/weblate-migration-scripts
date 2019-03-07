@@ -233,7 +233,7 @@ Adding a language to AtoM
 
 To add a language to AtoM first create a subdirectory for it, named using the
 appropriate language code, in the AtoM `app/qubit/i18n` directory. Then run the
-`import_from_atom` script.
+`import_from_atom` script in this repository.
 
 When, during import, AtoM extracts strings (from source code) it should then
 create a new XLIFF file for the new language. That XLIFF file will then be
@@ -242,4 +242,4 @@ imported into the Weblate repository.
 To test: If the language still doesn't show up in Weblate after doing a Git
 pull from the Weblate UI then try manually adding a fake source string to
 another language's messages.xml file, committing that, then doing another Git
-pull from the WEblate UI.
+pull from the Weblate UI.
