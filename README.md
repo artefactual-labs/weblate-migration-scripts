@@ -224,3 +224,22 @@ Example:
 Note: In order to simplify comparision, XLIFF content is summarized as JSON and
 these JSON files are put into the temp directory. If the `--debug` option is set
 then these files won't be deleted and can be examined.
+
+
+Adding a langauge to AtoM
+-------------------------
+
+* Untested *
+
+To add a language to AtoM first create a subdirectory for it, named using the
+appropriate language code, in the AtoM `app/qubit/i18n` directory. Then run the
+`import_from_atom` script.
+
+When, during import, AtoM extracts strings (from source code) it should then
+create a new XLIFF file for the new language. That XLIFF file will then be
+imported into the Weblate repository.
+
+To test: If the language still doesn't show up in Weblate after doing a Git
+pull from the Weblate UI then try manually adding a fake source string to
+another language's messages.xml file, committing that, then doing another Git
+pull from the WEblate UI.
