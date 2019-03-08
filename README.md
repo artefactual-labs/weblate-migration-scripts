@@ -242,4 +242,5 @@ imported into the Weblate repository.
 To test: If the language still doesn't show up in Weblate after doing a Git
 pull from the Weblate UI then try manually adding a fake source string to
 another language's messages.xml file, committing that, then doing another Git
-pull from the Weblate UI.
+pull from the Weblate UI (then removing the fake source string manually and
+doing another Git pull from the Weblate UI).
