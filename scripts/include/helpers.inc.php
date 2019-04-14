@@ -111,7 +111,14 @@ function addTransUnitAttributes($file, $preserveIds = false)
       // Set "translated" attribute
       if (!isset($element['translated']) || strtolower($element['translated']) != 'yes')
       {
-        $element->addAttribute('translated', 'yes');
+        if (!isset($element['translated']))
+        {
+          $element->addAttribute('translated', 'yes');
+        }
+        else
+        {
+          $element['translated'] = 'yes';
+        }
       }
     }
   }
