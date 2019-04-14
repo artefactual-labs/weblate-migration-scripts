@@ -44,7 +44,7 @@ being used.
 
 Run the automatic setup script from any directory:
 
-    $ source <(curl -L -s https://bit.ly/2RxFp4X)
+    $ source <(curl -L -s https://bit.ly/2KFhimG)
 
 The default branch in the AtoM repository will be used to determine the
 appropriate branch to change to in the Weblate AtoM translations repository:
