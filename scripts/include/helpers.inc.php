@@ -96,7 +96,14 @@ function addTransUnitAttributes($file, $preserveIds = false)
       // Set "approved" attribute
       if (!isset($element['approved']) || strtolower($element['approved']) != 'yes')
       {
-        $element->addAttribute('approved', 'yes');
+        if (!isset($element['approved']))
+	{
+          $element->addAttribute('approved', 'yes');
+	}
+	else
+	{
+          $element['approved'] = 'yes';
+        }
 
         $changed++;
       }
