@@ -29,6 +29,8 @@ APPROVED=false
 APPROVED_OPTION=""
 NO_PULL=false
 NO_PUSH=false
+COMMIT_WITH_MESSAGE=false
+
 while [ "$1" != "" ]; do
     # Attempt to parse out value
     PARAM=`echo $1 | awk -F= '{print $1}'`
