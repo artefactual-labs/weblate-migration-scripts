@@ -55,5 +55,12 @@ node {
       '''
     }
 
+    stage ('Upgrade Weblate test site') {
+      sh '''
+        tower-cli job launch -J "Weblate Upgrade" --monitor
+      '''
+    }
+
+
   }
 }
