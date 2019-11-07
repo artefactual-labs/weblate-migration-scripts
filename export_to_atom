@@ -16,6 +16,7 @@ usage() {
     echo "    [--commit-with-message=<message>]"
     echo "    [--no-pull]"
     echo "    [--no-push]"
+    echo "    [--skip-version-check]"
     echo ""
     echo "The --commit-with-message will automatically commit any XLIFF changed"
     echo "    using the specified message."
@@ -29,6 +30,7 @@ APPROVED=false
 APPROVED_OPTION=""
 NO_PULL=false
 NO_PUSH=false
+SKIP_VERSION_CHECK=false
 COMMIT_WITH_MESSAGE=false
 
 while [ "$1" != "" ]; do
@@ -71,6 +73,10 @@ while [ "$1" != "" ]; do
             ;;
         --no-push)
             NO_PUSH=true
+            VALUE=true
+            ;;
+        --skip-version-check)
+            SKIP_VERSION_CHECK=true
             VALUE=true
             ;;
         *)
@@ -137,7 +143,7 @@ echo "Currently in the '$WEBLATE_BRANCH' branch of the Weblate repo..."
 echo
 
 # Exit if estimated AtoM version doesn't match name of Weblate branch
-if [ "$ATOM_VERSION" != "$WEBLATE_BRANCH" ]; then
+if [ "$ATOM_VERSION" != "$WEBLATE_BRANCH" ] && [ "$SKIP_VERSION_CHECK" = false ]; then
     echo "Estimated AtoM version (using basename of AtoM branch) is '$ATOM_VERSION' and doesn't match name of checked out Weblate branch."
     exit 1
 fi
