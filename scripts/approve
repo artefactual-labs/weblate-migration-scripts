@@ -81,6 +81,6 @@ if ($approveCount)
 }
 else
 {
-  print "No XLIFF translation units found.\n";
+  print "No unapproved XLIFF translation units found.\n";
   exit(1);
 }
