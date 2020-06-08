@@ -32,6 +32,7 @@ NO_PULL=false
 NO_PUSH=false
 SKIP_VERSION_CHECK=false
 COMMIT_WITH_MESSAGE=false
+ATOM_SOURCE_DIR=".tx/i18n"
 
 while [ "$1" != "" ]; do
     # Attempt to parse out value
@@ -171,22 +172,35 @@ if [ "$NO_PULL" = false ]; then
     done
 fi
 
+# Extract all translations to .tx folder before comparison to Weblate's strings.
+phing i18n-push-translations
+
 # Compare AtoM XLIFF to Weblate XLIFF to see if an import is needed
-$SCRIPT_DIR/scripts/compare $APPROVED_OPTION --no-warning --language="$LANG_CODE" $ATOM_DIR/apps/qubit/i18n $WEBLATE_DIR/i18n
+$SCRIPT_DIR/scripts/compare $APPROVED_OPTION --no-warning --language="$LANG_CODE" $ATOM_DIR/$ATOM_SOURCE_DIR $WEBLATE_DIR/i18n
 
 # Import if Atom's not up to date
 if [ $? -ne 0 ]
 then
 
     # Export XLIFF to AtoM
-    $SCRIPT_DIR/scripts/migrate --export --language="$LANG_CODE" $APPROVED_OPTION $WEBLATE_DIR/i18n $ATOM_DIR/apps/qubit/i18n
+    $SCRIPT_DIR/scripts/migrate --export --language="$LANG_CODE" $APPROVED_OPTION $WEBLATE_DIR/i18n $ATOM_DIR/$ATOM_SOURCE_DIR
+
+    # Split .tx files into /apps/qubit/i18n and plugin i18n folders.
+    phing i18n-pull-translations
 
     #######################################
-    # Commit and push imported XLIFF files
+    # Commit and push imported XLIFF files.
+    # Optional parameter: commit message
     #######################################
-    function commit_and_push {
+    function commit_and_push () {
         git add apps/qubit/i18n
-        git commit
+        git add plugins
+        git add data/fixtures
+        if [[ ${!1} ]];then
+          git commit -m "$1"
+        else
+          git commit;
+        fi
         git push
     }
 
@@ -208,9 +222,7 @@ then
                     esac
                 done
             else
-                git add apps/qubit/i18n
-                git commit -m "$COMMIT_WITH_MESSAGE"
-                git push
+                commit_and_push "$COMMIT_WITH_MESSAGE"
             fi
         fi
     fi

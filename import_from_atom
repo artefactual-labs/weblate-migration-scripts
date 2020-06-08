@@ -16,6 +16,8 @@ usage() {
     echo "    [--commit-with-message=<message>]"
     echo "    [--no-pull]"
     echo "    [--no-push]"
+    echo "    [--skip-version-check]"
+    echo "    [--skip-push-translations]"
     echo ""
     echo "The --commit-with-message will automatically commit any XLIFF changed"
     echo "    using the specified message."
@@ -29,6 +31,9 @@ LANG_CODE="all"
 COMMIT_WITH_MESSAGE=false
 NO_PULL=false
 NO_PUSH=false
+ATOM_SOURCE_DIR=".tx/i18n"
+SKIP_VERSION_CHECK=false
+SKIP_PUSH_TRANSLATIONS=false
 while [ "$1" != "" ]; do
     # Attempt to parse out value
     PARAM=`echo $1 | awk -F= '{print $1}'`
@@ -65,6 +70,14 @@ while [ "$1" != "" ]; do
             ;;
         --no-push)
             NO_PUSH=true
+            VALUE=true
+            ;;
+        --skip-version-check)
+            SKIP_VERSION_CHECK=true
+            VALUE=true
+            ;;
+        --skip-push-translations)
+            SKIP_PUSH_TRANSLATIONS=true
             VALUE=true
             ;;
         *)
@@ -118,7 +131,7 @@ ATOM_BRANCH=`git rev-parse --symbolic-full-name --abbrev-ref HEAD`
 ATOM_VERSION=`basename $ATOM_BRANCH`
 
 # Exit if estimated AtoM version doesn't match name of Weblate branch
-if [ "$ATOM_VERSION" != "$WEBLATE_BRANCH" ]; then
+if [ "$ATOM_VERSION" != "$WEBLATE_BRANCH" ] && [ "$SKIP_VERSION_CHECK" = false ]; then
     echo "Estimated AtoM version (using basename of AtoM branch) is '$ATOM_VERSION' and doesn't match name of checked out Weblate branch."
     exit 1
 fi
@@ -126,7 +139,13 @@ fi
 # Change to AtoM directory and extract AtoM source strings,
 echo "Extracting source strings from source code and adding them to AtoM XLIFF files..."
 echo
-phing i18n-extract
+# Extract AtoM and plugin translations and merge all into AtoM's .tx folder
+if [ "$SKIP_PUSH_TRANSLATIONS" = false ]; then
+    # This takes about .5 hours to run. If .tx already contains the combined XLIFF
+    # required then this step can be skipped.
+    phing i18n-push-translations
+fi
+
 
 # Display currently checked out Weblate and AtoM branches
 echo "The Weblate repository has the '$WEBLATE_BRANCH' branch checked out."
@@ -148,14 +167,14 @@ if [ "$NO_PULL" = false ]; then
 fi
 
 # Compare AtoM XLIFF to Weblate XLIFF to see if an import is needed
-$SCRIPT_DIR/scripts/compare --language="$LANG_CODE" $ATOM_DIR/apps/qubit/i18n $WEBLATE_DIR/i18n
+$SCRIPT_DIR/scripts/compare --language="$LANG_CODE" $ATOM_DIR/$ATOM_SOURCE_DIR $WEBLATE_DIR/i18n
 
 # Import if Weblate's not up to date
 if [ $? -ne 0 ]
 then
 
     # Attempt import
-    $SCRIPT_DIR/scripts/migrate --import --language="$LANG_CODE" $ATOM_DIR/apps/qubit/i18n $WEBLATE_DIR/i18n
+    $SCRIPT_DIR/scripts/migrate --import --language="$LANG_CODE" $ATOM_DIR/$ATOM_SOURCE_DIR $WEBLATE_DIR/i18n
     MIGRATE_SUCCESS=$?
 
     # Check out AtoM i18n and plugins directory to remove changed local files
