@@ -182,8 +182,8 @@ $SCRIPT_DIR/scripts/compare $APPROVED_OPTION --no-warning --language="$LANG_CODE
 if [ $? -ne 0 ]
 then
 
-    # Export XLIFF to AtoM
-    $SCRIPT_DIR/scripts/migrate --export --language="$LANG_CODE" $APPROVED_OPTION $WEBLATE_DIR/i18n $ATOM_DIR/$ATOM_SOURCE_DIR
+    # Export XLIFF to AtoM. XLIFF will overwrite what is currently in .tx folder.
+    $SCRIPT_DIR/scripts/migrate --export --overwrite --language="$LANG_CODE" $APPROVED_OPTION $WEBLATE_DIR/i18n $ATOM_DIR/$ATOM_SOURCE_DIR
 
     # Split .tx files into /apps/qubit/i18n and plugin i18n folders.
     phing i18n-pull-translations

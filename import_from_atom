@@ -80,6 +80,10 @@ while [ "$1" != "" ]; do
             SKIP_PUSH_TRANSLATIONS=true
             VALUE=true
             ;;
+        --overwrite-weblate-xliff)
+            OVERWRITE=true
+            VALUE=true
+            ;;
         *)
             echo "ERROR: unknown parameter \"$PARAM\""
             usage
@@ -139,13 +143,13 @@ fi
 # Change to AtoM directory and extract AtoM source strings,
 echo "Extracting source strings from source code and adding them to AtoM XLIFF files..."
 echo
+
 # Extract AtoM and plugin translations and merge all into AtoM's .tx folder
 if [ "$SKIP_PUSH_TRANSLATIONS" = false ]; then
     # This takes about .5 hours to run. If .tx already contains the combined XLIFF
     # required then this step can be skipped.
     phing i18n-push-translations
 fi
-
 
 # Display currently checked out Weblate and AtoM branches
 echo "The Weblate repository has the '$WEBLATE_BRANCH' branch checked out."
@@ -174,7 +178,12 @@ if [ $? -ne 0 ]
 then
 
     # Attempt import
-    $SCRIPT_DIR/scripts/migrate --import --language="$LANG_CODE" $ATOM_DIR/$ATOM_SOURCE_DIR $WEBLATE_DIR/i18n
+    if [ "$OVERWRITE" = true ]; then
+        $SCRIPT_DIR/scripts/migrate --overwrite --import --language="$LANG_CODE" $ATOM_DIR/$ATOM_SOURCE_DIR $WEBLATE_DIR/i18n
+    else
+        $SCRIPT_DIR/scripts/migrate --merge --import --language="$LANG_CODE" $ATOM_DIR/$ATOM_SOURCE_DIR $WEBLATE_DIR/i18n
+    fi
+
     MIGRATE_SUCCESS=$?
 
     # Check out AtoM i18n and plugins directory to remove changed local files

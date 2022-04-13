@@ -16,15 +16,12 @@ function formatXliffForAtom($file, $options = array())
   $xpath = new DOMXPath($dom);
   $elements = $xpath->evaluate("//trans-unit");
 
-  foreach ($elements as $element)
-  {
-    if (!empty($options['approved']) && strtolower($element->getAttribute('approved')) != 'yes' && strtolower($element->getAttribute('translated')) != 'yes')
-    {
+  foreach ($elements as $element) {
+    if (!empty($options['approved']) && strtolower($element->getAttribute('approved')) != 'yes' && strtolower($element->getAttribute('translated')) != 'yes') {
       // Remove translation unit if it's not translated and approved
       $element->parentNode->removeChild($element);
     }
-    else
-    {
+    else {
       // Remove approved and translated attributes
       $element->removeAttribute('approved');
       $element->removeAttribute('translated');
@@ -51,16 +48,14 @@ function migrate($fromI18nDir, $toI18nDir, $options = array())
 
   // Cycle through each AtoM language directory
   print "Attempting to cycle through language directories in ". $fromI18nDir ."...\n";
-  try
-  {
+  try {
     $dir = new DirectoryIterator($fromI18nDir);
   }
-  catch(Exception $e)
-  {
+  catch(Exception $e) {
     abort('Unable to access '. $fromI18nDir);
   }
 
-  $copyCount = 0;
+  $count = 0;
 
   foreach ($dir as $fileinfo)
   {
@@ -68,21 +63,18 @@ function migrate($fromI18nDir, $toI18nDir, $options = array())
       $langDir = $fileinfo->getFilename();
 
       // If a language is specified, skip if this isn't the one
-      if (isset($options['language']) && $options['language'] != 'all' && $options['language'] != $langDir)
-      {
+      if (isset($options['language']) && $options['language'] != 'all' && $options['language'] != $langDir) {
         print "Skipped language '". $langDir ."'.\n";
         continue;
       }
 
       // There's no need to migrate English as it doesn't need to be translated
-      if (is_dir($fromI18nDir . DIRECTORY_SEPARATOR . $langDir) && $langDir != 'en')
-      {
+      if (is_dir($fromI18nDir . DIRECTORY_SEPARATOR . $langDir) && $langDir != 'en') {
         // Each language's XLIFF file'll end up in a subdir of the i18n directory
         $destLangDir = $toI18nDir . DIRECTORY_SEPARATOR . $langDir;
 
         // Create destination language directory if it doesn't exist
-        if (!is_dir($destLangDir))
-        {
+        if (!is_dir($destLangDir)) {
           mkdir($destLangDir);
           print "Created ". $destLangDir ."\n";
         }
@@ -91,31 +83,44 @@ function migrate($fromI18nDir, $toI18nDir, $options = array())
         $langFileRelativePath = $langDir . DIRECTORY_SEPARATOR . "messages.xml";
         $fromFile = $fromI18nDir . DIRECTORY_SEPARATOR . $langFileRelativePath;
         $toFile = $toI18nDir . DIRECTORY_SEPARATOR . $langFileRelativePath;
-        copy($fromFile, $toFile);
 
-        // Add approved and translated properties
-        if (!empty($options['import']))
-        {
+        print "Migrating ". $fromFile . " -> " . $toFile ."\n";
+
+        if (!empty($options['overwrite'])) {
+          copy($fromFile, $toFile);
+        }
+        else if (!empty($options['merge'])) {
+          // Copy AtoM XLIFF file to Weblate if it is not found
+          if (!file_exists($toFile)) {
+            print "Copying new file from AtoM: " . $toFile . "\n";
+            copy($fromFile, $toFile);
+            formatXliffForWeblate($toFile);
+          }
+          else {
+            mergeXliffAtomToWeblate($fromFile, $toFile);
+          }
+        }
+
+        // Add approved and translated properties when overwriting XLIFF.
+        if (!empty($options['import']) && !empty($options['overwrite'])) {
           formatXliffForWeblate($toFile);
         }
 
         // Remove approved and translated properties
-        if (!empty($options['export']))
-        {
+        if (!empty($options['export'])) {
           formatXliffForAtom($toFile, $options);
         }
 
-        if (!empty($options['debug']))
-        {
+        if (!empty($options['debug'])) {
           print 'DEBUG: Updated '. $toFile ." (". filesize($toFile) ." bytes)\n";
         }
 
-        $copyCount++;
+        $count++;
       }
     }
   }
 
-  return $copyCount;
+  return $count;
 }
 
 $parsed = parseArgs($argv);
@@ -125,30 +130,42 @@ $flags = $parsed['flags'];
 $fromDirectory = (isset($args[0])) ? $args[0] : null;
 $toDirectory   = (isset($args[1])) ? $args[1] : null;
 
-if (empty($fromDirectory) || empty($toDirectory))
-{
-  abort("Usage: ". basename(__FILE__) . " [--import|--export] [--aproved] [--language=<language code>] [--debug] <from directory> <to directory>\n");
+if (empty($fromDirectory) || empty($toDirectory)) {
+  abort("Usage: ". basename(__FILE__) . " [--import|--export] [--overwrite|--merge] [--approved] [--language=<language code>] [--debug] <from directory> <to directory>\n");
 }
 
-if (empty($flags['import']) && empty($flags['export']))
-{
+if (empty($flags['overwrite']) && empty($flags['merge'])) {
+  abort('Either the --merge or --overwrite flag should be used with this script.');
+}
+
+if (empty($flags['import']) && empty($flags['export'])) {
   abort('Either the --import or --export flag should be used with this script.');
 }
 
-if (empty($flags['export']) && !empty($flags['approved']))
-{
-  abort("The --approved flag (export transliation units marked 'approved') only works with --export.\n");
+if (empty($flags['export']) && !empty($flags['approved'])) {
+  abort("The --approved flag (export translation units marked 'approved') only works with --export.\n");
 }
 
-$copyCount = migrate($fromDirectory, $toDirectory, $flags);
-
-if (!empty($flags['import']))
-{
-  print "Importing from AtoM... the 'approved' and 'translated' attributes were added for translated units.\n";
+if (!empty($flags['import'])) {
+  print "Importing from AtoM...\n";
+  if (!empty($flags['overwrite'])) {
+    print "The 'approved' and 'translated' attributes will be added for translated units.\n";
+  }
 }
-elseif (!empty($flags['export']))
-{
-  print "Exporting to AtoM... the 'approved' and 'translated' attributes were removed from translation units.\n";
+elseif (!empty($flags['export'])) {
+  print "Exporting to AtoM...\n";
+  if (!empty($flags['overwrite'])) {
+    print "The 'approved' and 'translated' attributes will be removed from translation units.\n";
+  }
 }
 
-print("Done: copied ". $copyCount ." XLIFF files.\n");
+if (!empty($flags['merge'])) {
+  print "Merging XLIFF files...\n";
+}
+else {
+  print "Overwriting any XLIFF files...\n";
+}
+
+$count = migrate($fromDirectory, $toDirectory, $flags);
+
+print("Done: migrated ". $count ." XLIFF files.\n");

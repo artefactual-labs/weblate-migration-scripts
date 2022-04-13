@@ -50,6 +50,66 @@ function abortIfDirectoryDoesNotExist($dir)
   }
 }
 
+function mergeXliffAtomToWeblate(string $fromFile, string $toFile)
+{
+  $domA = new DOMDocument();
+  $domA->load($fromFile);
+
+  $domB = new DOMDocument();
+  $domB->load($toFile);
+
+  $result = mergeXliffDom($domA, $domB);
+
+  file_put_contents($toFile, $result->saveXml($result->documentElement));
+}
+
+function mergeXliffDom(DOMDocument $domA, DOMDocument $domB): DOMDocument
+{
+  // Elements in A but not in B -> copy to B
+  $sourcesA = $domA->getElementsByTagName('source');
+  $sourcesB = $domB->getElementsByTagName('source');
+
+  foreach ($sourcesA as $source) {
+    $stringsA[] = $source->nodeValue;
+  }
+
+  foreach ($sourcesB as $source) {
+    $stringsB[] = $source->nodeValue;
+  }
+
+  $copyToB = array_diff($stringsA, $stringsB);
+
+  foreach($sourcesA as $source) {
+    if (in_array($source->nodeValue, $copyToB)) {
+      // get parent which should be a trans-unit
+      $parent = $source->parentNode;
+      // add trans-unit as child of domB body
+      $bodyB = $domB->getElementsByTagName('body')[0];
+      $bodyB->appendChild($domB->importNode( $parent, true ));
+    }
+  }
+
+  // For elements in B not in A -> delete from B
+  // Refresh string array
+  foreach ($sourcesB as $source) {
+    $stringsB[] = $source->nodeValue;
+  }
+
+  $removeFromB = array_diff($stringsB, $stringsA);
+
+  foreach($sourcesB as $source) {
+    if (in_array($source->nodeValue, $removeFromB)) {
+      // get parent which should be a trans-unit
+      $parent = $source->parentNode;
+      // add trans-unit as child of domB body
+      $bodyB = $domB->getElementsByTagName('body')[0];
+      $bodyB->removeChild($parent);
+    }
+  }
+
+  return $domB;
+}
+
 function formatXliffForWeblate($file)
 {
   // Add 'approved' and 'translated' attributes
