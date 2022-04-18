@@ -110,10 +110,10 @@ function mergeXliffDom(DOMDocument $domA, DOMDocument $domB): DOMDocument
   return $domB;
 }
 
-function formatXliffForWeblate($file)
+function formatXliffForWeblate($file, $setApproved = false)
 {
   // Add 'approved' and 'translated' attributes
-  addTransUnitAttributes($file);
+  addTransUnitAttributes($file, $setApproved);
 
   // Load XLIFF file into DOM document
   $dom = new DOMDocument();
@@ -128,7 +128,7 @@ function formatXliffForWeblate($file)
   file_put_contents($file, $xml);
 }
 
-function addTransUnitAttributes($file, $preserveIds = false)
+function addTransUnitAttributes($file, $setApproved = false, $preserveIds = false)
 {
   $changed = 0;
 
@@ -147,21 +147,23 @@ function addTransUnitAttributes($file, $preserveIds = false)
       if ($id != sha1($source))
       {
         $element['id'] = sha1($source);
+
+        $changed++;
       }
     }
 
     // Set "approved" and "translated" attributes so Weblate knows translation status
-    if (count($element->xpath('source')) && count($element->xpath('target')) && !empty(trim($element->xpath('target')[0]->__toString())))
+    if ($setApproved && count($element->xpath('source')) && count($element->xpath('target')) && !empty(trim($element->xpath('target')[0]->__toString())))
     {
       // Set "approved" attribute
       if (!isset($element['approved']) || strtolower($element['approved']) != 'yes')
       {
         if (!isset($element['approved']))
-	{
+	      {
           $element->addAttribute('approved', 'yes');
-	}
-	else
-	{
+	      }
+	      else
+	      {
           $element['approved'] = 'yes';
         }
 
