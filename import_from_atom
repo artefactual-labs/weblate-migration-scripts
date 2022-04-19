@@ -84,6 +84,10 @@ while [ "$1" != "" ]; do
             OVERWRITE=true
             VALUE=true
             ;;
+        --remove-translated-attribute)
+            REMOVE_TRANSLATED=true
+            VALUE=true
+            ;;
         *)
             echo "ERROR: unknown parameter \"$PARAM\""
             usage
@@ -177,12 +181,24 @@ $SCRIPT_DIR/scripts/compare --language="$LANG_CODE" $ATOM_DIR/$ATOM_SOURCE_DIR $
 if [ $? -ne 0 ]
 then
 
-    # Attempt import
+    MIGRATE_COMMAND="$SCRIPT_DIR/scripts/migrate"
+    MIGRATE_OPTIONS=""
+
     if [ "$OVERWRITE" = true ]; then
-        $SCRIPT_DIR/scripts/migrate --overwrite --import --language="$LANG_CODE" $ATOM_DIR/$ATOM_SOURCE_DIR $WEBLATE_DIR/i18n
+        MIGRATE_OPTIONS="$MIGRATE_OPTIONS --overwrite"
     else
-        $SCRIPT_DIR/scripts/migrate --merge --import --language="$LANG_CODE" $ATOM_DIR/$ATOM_SOURCE_DIR $WEBLATE_DIR/i18n
+        MIGRATE_OPTIONS="$MIGRATE_OPTIONS --merge"
     fi
+
+    if [ "$REMOVE_TRANSLATED" = true ]; then
+        MIGRATE_OPTIONS="$MIGRATE_OPTIONS --remove-translated"
+    fi
+
+    MIGRATE_COMMAND="$MIGRATE_COMMAND $MIGRATE_OPTIONS --import --language="$LANG_CODE" $ATOM_DIR/$ATOM_SOURCE_DIR $WEBLATE_DIR/i18n"
+    
+    echo "$MIGRATE_COMMAND" 
+    # Attempt import
+    $MIGRATE_COMMAND
 
     MIGRATE_SUCCESS=$?
 

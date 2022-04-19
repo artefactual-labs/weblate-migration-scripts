@@ -53,9 +53,13 @@ function abortIfDirectoryDoesNotExist($dir)
 function mergeXliffAtomToWeblate(string $fromFile, string $toFile)
 {
   $domA = new DOMDocument();
+  $domA->preserveWhiteSpace = false;
+  $domA->formatOutput = true;
   $domA->load($fromFile);
 
   $domB = new DOMDocument();
+  $domB->preserveWhiteSpace = false;
+  $domB->formatOutput = true;
   $domB->load($toFile);
 
   $result = mergeXliffDom($domA, $domB);
@@ -110,9 +114,68 @@ function mergeXliffDom(DOMDocument $domA, DOMDocument $domB): DOMDocument
   return $domB;
 }
 
+// Remove the 'translated' attribute from all trans-units in the XLIFF file.
+// The 'translated' yes/no attribute attached to the trans-unit tag is no longer
+// used.
+function removeTranslatedAttribute($file)
+{
+  $dom = new DOMDocument();
+  $dom->preserveWhiteSpace = false;
+  $dom->formatOutput = true;
+  $dom->load($file);
+
+  // Remove 'translated' attribute
+  $xpath = new DOMXPath($dom);
+  $elements = $xpath->evaluate("//trans-unit");
+
+  foreach ($elements as $element) {
+    // Remove approved and translated attributes
+    $element->removeAttribute('translated');
+  }
+
+  file_put_contents($file, $dom->saveXml($dom->documentElement));
+}
+
+function formatXliffForAtom($file, $options = array())
+{
+  // Load XLIFF file into DOM document (tidying so whitespace is same as in AtoM)
+  $dom = new DOMDocument();
+  $dom->preserveWhiteSpace = false;
+  $dom->formatOutput = true;
+
+  $dom->load($file);
+
+  $xpath = new DOMXPath($dom);
+  $elements = $xpath->evaluate("//trans-unit");
+
+  foreach ($elements as $element) {
+    if (!empty($options['approved']) && strtolower($element->getAttribute('approved')) != 'yes') {
+      // Remove translation unit if it's not approved
+      $element->parentNode->removeChild($element);
+    }
+    else {
+      // Remove approved attribute
+      $element->removeAttribute('approved');
+    }
+  }
+
+  // Correct XML and DOCTYPE
+  $newDom = new DOMDocument();
+  $domImp = new DOMImplementation();
+  $newDom->appendChild($domImp->createDocumentType('xliff PUBLIC "-//XLIFF//DTD XLIFF//EN" "http://www.oasis-open.org/committees/xliff/documents/xliff.dtd"'));
+
+  // Create XML fragment with XLIFF element
+  $xliffFragment = $newDom->createDocumentFragment();
+  $xliffFragment->appendXml($dom->saveXml($dom->documentElement));
+
+  $newDom->appendChild($xliffFragment);
+
+  $newDom->save($file);
+}
+
 function formatXliffForWeblate($file, $setApproved = false)
 {
-  // Add 'approved' and 'translated' attributes
+  // Add 'approved' attributes
   addTransUnitAttributes($file, $setApproved);
 
   // Load XLIFF file into DOM document
@@ -168,19 +231,6 @@ function addTransUnitAttributes($file, $setApproved = false, $preserveIds = fals
         }
 
         $changed++;
-      }
-
-      // Set "translated" attribute
-      if (!isset($element['translated']) || strtolower($element['translated']) != 'yes')
-      {
-        if (!isset($element['translated']))
-        {
-          $element->addAttribute('translated', 'yes');
-        }
-        else
-        {
-          $element['translated'] = 'yes';
-        }
       }
     }
   }

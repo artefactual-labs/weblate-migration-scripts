@@ -112,8 +112,8 @@ Example import:
     $ ./import_from_atom --atom-dir="$HOME/atom" --weblate-dir="$HOME/atom-translations"
 
 In addition to copying the XLIFF files it will also process them so they're
-suitable for Weblate (among other things, adding "approved" and "translated"
-attributes to each XLIFF translation unit that's already been translated).
+suitable for Weblate (among other things, adding "approved" attribute to 
+each XLIFF translation unit that's already been translated).
 
 The script will then offer to Git commit the XLIFF files in the i18n
 subdirectory of the Weblate AtoM translations repo and Git push the changes.
@@ -155,8 +155,8 @@ If the `--approved` flag isn't set all translation units will be exported to
 AtoM (used for testing out unapproved translations).
 
 In addition to copying the XLIFF files it will also process them so they're 
-suitable for AtoM (among other things, removing the "approved" and "translated" 
-attributes for each XLIFF translation unit that's been translated).
+suitable for AtoM (among other things, removing the "approved" attribute 
+for each XLIFF translation unit that's been translated).
 
 The script will then offer to Git commit the XLIFF files in the
 `apps/qubit/i18n` subdirectory of the AtoM repo and Git push the changes.
@@ -184,8 +184,8 @@ option. For example: `--language="ca"`.
 Approving all translation units in an XLIFF file
 ------------------------------------------------
 
-Run script to mark all translation units in one or more XLIFF file(s) as `approved`
-and `translated`.
+Run script to mark all translation units in one or more XLIFF file(s) as
+`approved`.
 
 Example:
 
