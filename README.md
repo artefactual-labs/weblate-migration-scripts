@@ -244,3 +244,18 @@ pull from the Weblate UI then try manually adding a fake source string to
 another language's messages.xml file, committing that, then doing another Git
 pull from the Weblate UI (then removing the fake source string manually and
 doing another Git pull from the Weblate UI).
+
+
+Continuous integration
+----------------------
+
+Weblate pushes translation updates to 2.5.x branch in the atom-translations repo 
+each day.
+
+Updates to the atom-translation repo trigger a jenkins job called ExportToAtom
+that runs the export_to_atom script, pushes the changes to dev/translations atom 
+branch and updates the weblate.accesstomemory.og test site, so translations can
+be tested in place.
+
+There is another jenkins job called ImportFromAtom that can be run manually when
+new strings need to be added to Weblate.

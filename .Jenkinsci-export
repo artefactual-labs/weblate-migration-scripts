@@ -1,0 +1,66 @@
+node {
+  timestamps {
+    stage('Get code') {
+      // If environment variables are defined, honour them
+      env.ATOM_BRANCH = sh(script: 'echo ${ATOM_BRANCH:-"qa/2.5.x"}', returnStdout: true).trim()
+      env.TRANSLATIONS_BRANCH = sh(script: 'echo ${TRANSLATIONS_BRANCH:-"2.5.x"}', returnStdout: true).trim()
+      env.WEBLATE_BRANCH = sh(script: 'echo ${WEBLATE_BRANCH:-"master"}', returnStdout: true).trim()
+      // Set build name
+      currentBuild.displayName = "#${BUILD_NUMBER} Export to AtoM ${ATOM_BRANCH}"
+
+      checkout([$class: 'GitSCM',
+        branches: [[name: env.ATOM_BRANCH]],
+        doGenerateSubmoduleConfigurations: false,
+        extensions:
+          [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'atom'],
+          [$class: 'CleanBeforeCheckout'],
+          [$class: 'LocalBranch', localBranch:env.ATOM_BRANCH ]],
+          submoduleCfg: [],
+          userRemoteConfigs: [[url: 'git@github.com:artefactual/atom']]])
+       checkout([$class: 'GitSCM',
+        branches: [[name: env.TRANSLATIONS_BRANCH]],
+        doGenerateSubmoduleConfigurations: false,
+        extensions:
+          [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'atom-translations'],
+          [$class: 'LocalBranch', localBranch:env.TRANSLATIONS_BRANCH ]],
+          submoduleCfg: [],
+          userRemoteConfigs: [[url: 'git@github.com:artefactual/atom-translations']]])
+       checkout([$class: 'GitSCM',
+        branches: [[name: env.WEBLATE_BRANCH]],
+        doGenerateSubmoduleConfigurations: false,
+        extensions:
+          [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'weblate-migration-scripts']],
+          submoduleCfg: [],
+          userRemoteConfigs: [[url: 'https://github.com/artefactual-labs/weblate-migration-scripts']]])
+    }
+
+
+    stage ('Export strings to atom') {
+      sh '''
+        echo Export Weblate translations to AtoM
+        cd weblate-migration-scripts
+        ./export_to_atom --atom-dir=\"../atom\" --weblate-dir=\"../atom-translations\" --no-pull --no-push --commit-with-message=\"Imported new translations from Weblate\"
+      '''
+    }
+
+    stage ('Push changes to translations test branch') {
+      sh '''
+        echo Commit and push changes
+        cd atom
+        git add apps/qubit/i18n/*
+        git commit -m "Imported new translations from Weblate"
+        git push origin qa/2.5.x:dev/translations -f
+        cd ..
+        rm -rf atom/
+      '''
+    }
+
+    stage ('Upgrade Weblate test site') {
+      sh '''
+        tower-cli job launch -J "Weblate Upgrade" --monitor
+      '''
+    }
+
+
+  }
+}
