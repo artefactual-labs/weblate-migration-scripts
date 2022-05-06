@@ -105,7 +105,7 @@ function mergeXliffDom(DOMDocument $domA, DOMDocument $domB): DOMDocument
     if (in_array($source->nodeValue, $removeFromB)) {
       // get parent which should be a trans-unit
       $parent = $source->parentNode;
-      // add trans-unit as child of domB body
+      // remove trans-unit as child of domB body
       $bodyB = $domB->getElementsByTagName('body')[0];
       $bodyB->removeChild($parent);
     }
@@ -150,8 +150,19 @@ function formatXliffForAtom($file, $options = array())
 
   foreach ($elements as $element) {
     if (!empty($options['approved']) && strtolower($element->getAttribute('approved')) != 'yes') {
-      // Remove translation unit if it's not approved
-      $element->parentNode->removeChild($element);
+        // Remove translation unit if it's not approved
+        $element->parentNode->removeChild($element);
+      /*
+      // Remove target translation if it's not approved, leaving the trans-unit in place.
+      foreach ($element->childNodes as $child ) {
+        if ($child->nodeName == 'target') {
+          $element->removeChild($child);
+          // Append empty <target/> to match Weblate's XLIFF export style.
+          $node = $dom->createElement('target');
+          $element->appendChild($node);
+        }
+      }
+      */
     }
     else {
       // Remove approved attribute

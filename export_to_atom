@@ -175,59 +175,49 @@ fi
 # Extract all translations to .tx folder before comparison to Weblate's strings.
 phing i18n-push-translations
 
-# Compare AtoM XLIFF to Weblate XLIFF to see if an import is needed
-$SCRIPT_DIR/scripts/compare $APPROVED_OPTION --no-warning --language="$LANG_CODE" $ATOM_DIR/$ATOM_SOURCE_DIR $WEBLATE_DIR/i18n
+# Export XLIFF to AtoM. XLIFF will overwrite what is currently in .tx folder.
+$SCRIPT_DIR/scripts/migrate --export --overwrite --language="$LANG_CODE" $APPROVED_OPTION $WEBLATE_DIR/i18n $ATOM_DIR/$ATOM_SOURCE_DIR
 
-# Import if Atom's not up to date
-if [ $? -ne 0 ]
+# Split .tx files into /apps/qubit/i18n and plugin i18n folders.
+phing i18n-pull-translations
+
+#######################################
+# Commit and push imported XLIFF files.
+# Optional parameter: commit message
+#######################################
+function commit_and_push () {
+    git add apps/qubit/i18n
+    git add plugins
+    git add data/fixtures
+    if [[ ${!1} ]];then
+        git commit -m "$1"
+    else
+        git commit;
+    fi
+    git push
+}
+
+# Offer to commit and push changes if XLIFF was imported successfully
+if [ $? -eq 0 ]
 then
+    cd $ATOM_DIR
 
-    # Export XLIFF to AtoM. XLIFF will overwrite what is currently in .tx folder.
-    $SCRIPT_DIR/scripts/migrate --export --overwrite --language="$LANG_CODE" $APPROVED_OPTION $WEBLATE_DIR/i18n $ATOM_DIR/$ATOM_SOURCE_DIR
+    echo
 
-    # Split .tx files into /apps/qubit/i18n and plugin i18n folders.
-    phing i18n-pull-translations
-
-    #######################################
-    # Commit and push imported XLIFF files.
-    # Optional parameter: commit message
-    #######################################
-    function commit_and_push () {
-        git add apps/qubit/i18n
-        git add plugins
-        git add data/fixtures
-        if [[ ${!1} ]];then
-          git commit -m "$1"
+    if [ "$NO_PUSH" = false ]; then
+        if [ "$COMMIT_WITH_MESSAGE" = false ]; then
+            while true; do
+                read -p "Do you wish to commit the changes to the AtoM repo and push them? " yn
+                case $yn in
+                    [Yy]* ) commit_and_push; break;;
+                    [Nn]* ) exit;;
+                    * ) echo "Please answer yes or no.";;
+                esac
+            done
         else
-          git commit;
-        fi
-        git push
-    }
-
-    # Offer to commit and push changes if XLIFF was imported successfully
-    if [ $? -eq 0 ]
-    then
-        cd $ATOM_DIR
-
-        echo
-
-        if [ "$NO_PUSH" = false ]; then
-            if [ "$COMMIT_WITH_MESSAGE" = false ]; then
-                while true; do
-                    read -p "Do you wish to commit the changes to the AtoM repo and push them? " yn
-                    case $yn in
-                        [Yy]* ) commit_and_push; break;;
-                        [Nn]* ) exit;;
-                        * ) echo "Please answer yes or no.";;
-                    esac
-                done
-            else
-                commit_and_push "$COMMIT_WITH_MESSAGE"
-            fi
+            commit_and_push "$COMMIT_WITH_MESSAGE"
         fi
     fi
-else
-    echo "No export needed."
 fi
 
 # Return to inital directory
