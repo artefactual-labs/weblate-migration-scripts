@@ -40,24 +40,30 @@ function migrate($fromI18nDir, $toI18nDir, $options = array())
           print "Created ". $destLangDir ."\n";
         }
 
-        // Copy AtoM's XLIFF file into repo (replacing if a file already exists)
         $langFileRelativePath = $langDir . DIRECTORY_SEPARATOR . "messages.xml";
         $fromFile = $fromI18nDir . DIRECTORY_SEPARATOR . $langFileRelativePath;
         $toFile = $toI18nDir . DIRECTORY_SEPARATOR . $langFileRelativePath;
 
         print "Migrating ". $fromFile . " -> " . $toFile ."\n";
 
+        // 'Approved' can only be set on export. Only relevant when moving strings
+        // from Weblate -> AtoM.
+        if (!empty($options['approved']) && !empty($options['export'])) {
+            print "Omitting unapproved strings.\n";
+            filterUnapprovedTransUnits($fromFile);
+        }
+
         if (!empty($options['overwrite'])) {
           copy($fromFile, $toFile);
         }
         else if (!empty($options['merge'])) {
-          // Copy AtoM XLIFF file to Weblate if it is not found
           if (!file_exists($toFile)) {
-            print "Copying new file from AtoM: " . $toFile . "\n";
+            print "Copying file from : " . $fromFile . "\n";
             copy($fromFile, $toFile);
           }
           else {
-            mergeXliffAtomToWeblate($fromFile, $toFile);
+            print "Merging files into: " . $toFile . "\n";
+            mergeXliff($fromFile, $toFile, !empty($options['export']));
           }
         }
 
@@ -69,7 +75,6 @@ function migrate($fromI18nDir, $toI18nDir, $options = array())
           formatXliffForWeblate($toFile);
         }
 
-        // Remove approved attribute
         if (!empty($options['export'])) {
           formatXliffForAtom($toFile, $options);
         }

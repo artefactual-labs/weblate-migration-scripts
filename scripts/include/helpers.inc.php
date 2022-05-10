@@ -50,7 +50,7 @@ function abortIfDirectoryDoesNotExist($dir)
   }
 }
 
-function mergeXliffAtomToWeblate(string $fromFile, string $toFile)
+function mergeXliff(string $fromFile, string $toFile, bool $toAtoM)
 {
   $domA = new DOMDocument();
   $domA->preserveWhiteSpace = false;
@@ -62,12 +62,58 @@ function mergeXliffAtomToWeblate(string $fromFile, string $toFile)
   $domB->formatOutput = true;
   $domB->load($toFile);
 
-  $result = mergeXliffDom($domA, $domB);
+  if ($toAtoM) {
+    $domB = mergeXliffDomToAtom($domA, $domB);
+  }
+  else {
+    $domB = mergeXliffDomToWeblate($domA, $domB);
+  }
 
-  file_put_contents($toFile, $result->saveXml($result->documentElement));
+  file_put_contents($toFile, $domB->saveXml($domB->documentElement));
 }
 
-function mergeXliffDom(DOMDocument $domA, DOMDocument $domB): DOMDocument
+
+function mergeXliffDomToAtom(DOMDocument $domA, DOMDocument $domB): DOMDocument
+{
+    // Elements in Weblate and in AtoM - overwrite AtoM trans-units to update 
+    // translation. Ignore any trans-units in Weblate that no longer exist in AtoM.
+    $sourcesA = $domA->getElementsByTagName('source');
+    $sourcesB = $domB->getElementsByTagName('source');
+
+    foreach ($sourcesA as $source) {
+        $stringsA[] = $source->nodeValue;
+    }
+
+    foreach ($sourcesB as $source) {
+        $stringsB[] = $source->nodeValue;
+    }
+
+    $updateInB = array_intersect($stringsA, $stringsB);
+
+    foreach($sourcesA as $sourceA) {
+        if (in_array($sourceA->nodeValue, $updateInB)) {
+            // This destination node needs updating. Get matching dest source node.
+            foreach ($sourcesB as $sourceB) {
+                if ($sourceB->nodeValue === $sourceA->nodeValue) {
+                    // Get parent which should be a trans-unit.
+                    $parentB = $sourceB->parentNode;
+                    break;
+                }
+            }
+
+            $parentA = $sourceA->parentNode;
+
+            // Add trans-unit as child of domB body.
+            $bodyB = $domB->getElementsByTagName('body')[0];
+            $new = $domB->importNode($parentA, true);
+            $bodyB->replaceChild($new, $parentB);
+        }
+    }
+
+    return $domB;
+}
+
+function mergeXliffDomToWeblate(DOMDocument $domA, DOMDocument $domB): DOMDocument
 {
   // Elements in A but not in B -> copy to B
   $sourcesA = $domA->getElementsByTagName('source');
@@ -136,7 +182,7 @@ function removeTranslatedAttribute($file)
   file_put_contents($file, $dom->saveXml($dom->documentElement));
 }
 
-function formatXliffForAtom($file, $options = array())
+function filterUnapprovedTransUnits($file)
 {
   // Load XLIFF file into DOM document (tidying so whitespace is same as in AtoM)
   $dom = new DOMDocument();
@@ -149,26 +195,27 @@ function formatXliffForAtom($file, $options = array())
   $elements = $xpath->evaluate("//trans-unit");
 
   foreach ($elements as $element) {
-    if (!empty($options['approved']) && strtolower($element->getAttribute('approved')) != 'yes') {
+    if (strtolower($element->getAttribute('approved')) != 'yes') {
         // Remove translation unit if it's not approved
         $element->parentNode->removeChild($element);
-      /*
-      // Remove target translation if it's not approved, leaving the trans-unit in place.
-      foreach ($element->childNodes as $child ) {
-        if ($child->nodeName == 'target') {
-          $element->removeChild($child);
-          // Append empty <target/> to match Weblate's XLIFF export style.
-          $node = $dom->createElement('target');
-          $element->appendChild($node);
-        }
-      }
-      */
     }
     else {
       // Remove approved attribute
       $element->removeAttribute('approved');
     }
   }
+
+  file_put_contents($file, $dom->saveXml($dom->documentElement));
+}
+
+function formatXliffForAtom($file, $options = array())
+{
+  // Load XLIFF file into DOM document (tidying so whitespace is same as in AtoM)
+  $dom = new DOMDocument();
+  $dom->preserveWhiteSpace = false;
+  $dom->formatOutput = true;
+
+  $dom->load($file);
 
   // Correct XML and DOCTYPE
   $newDom = new DOMDocument();
