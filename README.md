@@ -112,7 +112,7 @@ Example import:
     $ ./import_from_atom --atom-dir="$HOME/atom" --weblate-dir="$HOME/atom-translations"
 
 In addition to copying the XLIFF files it will also process them so they're
-suitable for Weblate (among other things, adding "approved" attribute to 
+suitable for Weblate (among other things, adding an "approved" attribute to 
 each XLIFF translation unit that's already been translated).
 
 The script will then offer to Git commit the XLIFF files in the i18n

@@ -88,6 +88,12 @@ function mergeXliffDomToAtom(DOMDocument $domA, DOMDocument $domB): DOMDocument
         $stringsB[] = $source->nodeValue;
     }
 
+    // If Weblate's XLIFF is empty (e.g. because all are unapproved)
+    // then return the target dom unchanged.
+    if (!isset($stringsA)) {
+        return $domB;
+    }
+
     $updateInB = array_intersect($stringsA, $stringsB);
 
     foreach($sourcesA as $sourceA) {
