@@ -119,47 +119,94 @@ function mergeXliffDomToAtom(DOMDocument $domA, DOMDocument $domB): DOMDocument
     return $domB;
 }
 
+function getStringFromSource(DOMNodeList $sources): string
+{
+  $strings = [];
+  foreach ($sources as $source) {
+    $strings[] = $source->nodeValue;
+  }
+
+  return implode("", $strings);
+}
+
 function mergeXliffDomToWeblate(DOMDocument $domA, DOMDocument $domB): DOMDocument
 {
-  // Elements in A but not in B -> copy to B
-  $sourcesA = $domA->getElementsByTagName('source');
-  $sourcesB = $domB->getElementsByTagName('source');
+  // Elements in A AND B -> check source string and if different -> replace in B
+  $transUnitsA = $domA->getElementsByTagName('trans-unit');
+  $transUnitsB = $domB->getElementsByTagName('trans-unit');
 
-  foreach ($sourcesA as $source) {
-    $stringsA[] = $source->nodeValue;
-  }
+  for ($i = 0; $i < count($transUnitsA); $i++) {
+    if ($transUnitsA->item($i)->hasAttribute('id')) {
+      $transUnitsA->item($i)->setIdAttribute('id', true);
 
-  foreach ($sourcesB as $source) {
-    $stringsB[] = $source->nodeValue;
-  }
-
-  $copyToB = array_diff($stringsA, $stringsB);
-
-  foreach($sourcesA as $source) {
-    if (in_array($source->nodeValue, $copyToB)) {
-      // get parent which should be a trans-unit
-      $parent = $source->parentNode;
-      // add trans-unit as child of domB body
-      $bodyB = $domB->getElementsByTagName('body')[0];
-      $bodyB->appendChild($domB->importNode( $parent, true ));
+      $idListA[] = $transUnitsA->item($i)->getAttribute('id');
     }
   }
 
-  // For elements in B not in A -> delete from B
-  // Refresh string array
-  foreach ($sourcesB as $source) {
-    $stringsB[] = $source->nodeValue;
+  for ($i = 0; $i < count($transUnitsB); $i++) {
+    if ($transUnitsB->item($i)->hasAttribute('id')) {
+      $transUnitsB->item($i)->setIdAttribute('id', true);
+
+      $idListB[] = $transUnitsB->item($i)->getAttribute('id');
+    }
   }
 
-  $removeFromB = array_diff($stringsB, $stringsA);
+  // Items in A that are also in B.
+  $verifyInB = array_intersect($idListA, $idListB);
 
-  foreach($sourcesB as $source) {
-    if (in_array($source->nodeValue, $removeFromB)) {
-      // get parent which should be a trans-unit
-      $parent = $source->parentNode;
-      // remove trans-unit as child of domB body
+  // Use trans-unit's id attribute to identify strings. When one is
+  // matched, compare the source string target and if different,
+  // replace it in target.
+  for ($i = 0; $i < count($transUnitsA); $i++) {
+    $id = $transUnitsA->item($i)->getAttribute('id');
+
+    if (in_array($id, $verifyInB)) {
+      $node = $domB->getElementById($id);
+
+      // Get 'source' string element from dom B trans-unit.
+      $stringB = getStringFromSource($node->getElementsByTagName('source'));
+
+      $stringA = getStringFromSource(
+        $transUnitsA->item($i)->getElementsByTagName('source')
+      );
+
+      // Compare strings. If different, delete and replace trans-unit.
+      if ($stringA !== $stringB) {
+        // Remove trans-unit as child of domB body
+        $bodyB = $domB->getElementsByTagName('body')[0];
+        $bodyB->removeChild($node);
+
+        // Add matching trans-unit from domA.
+        $bodyB->appendChild($domB->importNode($transUnitsA->item($i), true));
+      }
+    }
+  }
+
+  // Elements in A but not in B -> copy to B.
+  $copyToB = array_diff($idListA, $idListB);
+
+  foreach ($copyToB as $id) {
+    $node = $domA->getElementById($id);
+    if (null !== $node) {
       $bodyB = $domB->getElementsByTagName('body')[0];
-      $bodyB->removeChild($parent);
+
+      // Add matching trans-unit from domA.
+      $bodyB->appendChild($domB->importNode($node, true));
+    }
+  }
+
+  // For elements in B not in A -> delete from B.
+
+  // $idListB is stale here - it is missing items that were copied in
+  // from A above. This does not matter for this comparison as these
+  // items are already in A so are not removed.
+  $removeFromB = array_diff($idListB, $idListA);
+
+  foreach ($removeFromB as $id) {
+    $node = $domB->getElementById($id);
+    if (null !== $node) {
+      $bodyB = $domB->getElementsByTagName('body')[0];
+      $bodyB->removeChild($node);
     }
   }
 
