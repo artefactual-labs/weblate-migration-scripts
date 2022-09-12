@@ -71,6 +71,8 @@ function migrate($fromI18nDir, $toI18nDir, $options = array())
           removeTranslatedAttribute($toFile);
         }
 
+        setPreserveSpacing($toFile);
+
         if (!empty($options['import'])) {
           formatXliffForWeblate($toFile);
         }

@@ -302,6 +302,45 @@ function formatXliffForWeblate($file, $setApproved = false)
   file_put_contents($file, $xml);
 }
 
+// Weblate will not preserve leading and trailing blank spaces or newlines by default.
+// Set xml:space="preserve" attribute on source and target strings to override this 
+// behaviour.
+function setPreserveSpacing($file)
+{
+  $changed = 0;
+
+  $xml = simplexml_load_file($file);
+
+  $elementList = ["//source", "//target"];
+
+  foreach ($elementList as $elementName) {
+    $elements = $xml->xpath($elementName);
+
+    foreach ($elements as $element) {
+      // Get the xml namespace attributes for this element.
+      $xmlnsAttrs = [];
+      if (isset($element->getNamespaces(true)['xml'])) {
+        $xmlnsAttrs = $element->attributes($element->getNamespaces(true)['xml']);
+      }
+
+      if (isset($xmlnsAttrs['space']) && strtolower($xmlnsAttrs['space']) != 'preserve') {
+        $xmlnsAttrs['space'] = 'preserve';
+        $changed++;
+      } elseif (!isset($xmlnsAttrs['space'])) {
+        $element->addAttribute('xml:space', 'preserve', 'http://www.w3.org/XML/1998/namespace');
+        $changed++;
+      }
+    }
+  }
+
+  if ($changed)
+  {
+    $xml->asXml($file);
+  }
+
+  return $changed;
+}
+
 function addTransUnitAttributes($file, $setApproved = false, $preserveIds = false)
 {
   $changed = 0;
